@@ -1,0 +1,4 @@
+.idea
+config/ssh/id_rsa
+config/app.php
+config/deploy.php

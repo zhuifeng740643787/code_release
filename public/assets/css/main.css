@@ -1,0 +1,116 @@
+.layout {
+    border: 1px solid #d7dde4;
+    background: #f5f7f9;
+    position: relative;
+    border-radius: 4px;
+    overflow: auto;
+}
+
+.form-wrapper {
+    width: 100%;
+    padding: 10px;
+}
+
+.form-item {
+    display: flex;
+    margin: 10px;
+    align-items: center;
+}
+
+.form-item .form-label[required]:after {
+    content: '*';
+    color: #ff6600;
+}
+
+.form-item .form-label {
+    width: 100px;
+    margin-right: 10px;
+    text-align: right;
+}
+
+.form-item .item-content {
+    flex: 1;
+}
+
+.card-wrapper {
+    border: 1px solid #ccccff;
+}
+
+/* 文件交换区 */
+.replace-wrapper {
+    width: 100%;
+    min-height: 120px;
+}
+
+.item-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-left: #ccccff 1px solid;
+    border-right: #ccccff 1px solid;
+    border-bottom: #ccccff 1px solid;
+
+}
+.item-wrapper.header {
+    background-color: #ccccff;
+    border: none;
+}
+
+.item-wrapper .item-header {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.item-wrapper .item-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.item-wrapper .item-action {
+    width: 150px;
+    display: inline-block;
+}
+
+.item-wrapper .item-main > div {
+    padding: 10px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-wrapper .left-box {
+    width: 400px;
+}
+
+.item-wrapper .center-box {
+    width: 50px;
+}
+
+.item-wrapper .right-box {
+    flex: 1;
+}
+.action-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    padding-right: 50px;
+    border-top: 2px solid #cccccc;
+}
+
+.spin-icon-load{
+    animation: ani-spin 1s linear infinite;
+}
+@keyframes ani-spin {
+    from { transform: rotate(0deg);}
+    50%  { transform: rotate(180deg);}
+    to   { transform: rotate(360deg);}
+}
+.spin-col{
+    height: 100px;
+    position: relative;
+    border: 1px solid #eee;
+}
