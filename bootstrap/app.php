@@ -14,4 +14,6 @@ $routes = require_once PROJECT_ROOT . DS . 'bootstrap' . DS . 'routes.php';
 $app->bootHttp($routes);
 $app->setView(PROJECT_ROOT . DS . 'resource' . DS . 'views');
 $app->setConfig(PROJECT_ROOT . DS . 'config');
+$app->setLog();
 $app->handleRequest();
+

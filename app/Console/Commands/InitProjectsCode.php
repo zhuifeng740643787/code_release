@@ -27,7 +27,7 @@ class InitProjectsCode extends Command
         $deploy_config_file = $config_path . DS . 'deploy.php';
         $repositories = $app_config['repositories'];
         $deploy_path = PROJECT_ROOT . DS . 'deploy';
-        $dep_cmd_path = $deploy_default_config['local_dep_path'];
+        $dep_cmd_path = $deploy_default_config['local_dep_bin'];
         foreach ($repositories as $project_name => $repository) {
             Utils::log("$repository start");
             // 重置配置文件

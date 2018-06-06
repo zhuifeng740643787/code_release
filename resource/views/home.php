@@ -114,6 +114,13 @@
                   </Card>
               </div>
             </div>
+            <div class="form-item">
+              <label for="" class="form-label" required>备注</label>
+              <div class="item-content">
+                <i-input v-model="formItem.remark" :autosize="{minRows: 3}" size="large" type="textarea"  placeholder="发版说明" style="max-width: 800px"></i-input>
+
+              </div>
+            </div>
             <div class="action-wrapper">
               <div class="buttons">
                 <i-button type="primary" size="large" v-on:click="handleSubmit">提交</i-button>

@@ -2,6 +2,7 @@
 namespace App;
 use App\Lib\Config;
 use App\Lib\Console;
+use App\Lib\Log;
 use App\Lib\Request;
 use App\Lib\Response;
 use App\Lib\Router;
@@ -22,6 +23,7 @@ class Application {
     public $console;
     public $view;
     public $config;
+    public $log;
 
     public function bootHttp($route_path) {
         $this->request = new Request($this);
@@ -39,6 +41,10 @@ class Application {
 
     public function setConfig($config_path) {
         $this->config = new Config($this, $config_path);
+    }
+
+    public function setLog() {
+        $this->log = new Log($this);
     }
 
     public function handleRequest() {

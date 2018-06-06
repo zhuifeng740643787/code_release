@@ -13,6 +13,8 @@ class Config
     public $app;
     protected $file_path; // 文件路径
 
+    public static $included_files = []; // 已经包含的文件
+
     /**
      * Config constructor.
      * @param $app Application
@@ -30,8 +32,9 @@ class Config
 
     /**
      * 获取配置
-     * @param $config app.hosts
+     * @param $config
      * @return mixed|void
+     * @throws \Exception
      */
     public function get($config) {
         if (!$config) {
@@ -39,12 +42,20 @@ class Config
         }
 
         $config_arr = explode('.', $config);
-        $config_file = $this->file_path . DS . $config_arr[0] . '.php';
-        if (!file_exists($config_file)) {
-            throw new \Exception('配置文件不存在:' . $config_file);
-        }
+        $config_file_name = $config_arr[0];
+        if (isset(self::$included_files[$config_file_name])) {
+            $obj = self::$included_files[$config_file_name];
+        } else {
 
-        $obj = include_once $config_file;
+            $config_file = $this->file_path . DS . $config_file_name . '.php';
+            if (!file_exists($config_file)) {
+                throw new \Exception('配置文件不存在:' . $config_file);
+            }
+
+            $obj = include $config_file;
+
+            self::$included_files[$config_file_name] = $obj;
+        }
         unset($config_arr[0]);
         foreach ($config_arr as $item) {
             $obj = $obj[$item];

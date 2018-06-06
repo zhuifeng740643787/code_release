@@ -7,6 +7,8 @@
  */
 namespace App\Helper;
 
+use App\Lib\Log;
+
 class Utils {
 
     /**
@@ -24,5 +26,71 @@ class Utils {
         echo PHP_EOL;
     }
 
+
+    /**
+     * 写入配置文件内容
+     * @param $file_name
+     * @param $content
+     * @return bool
+     */
+    public static function writeConfigFile($file_name, $content) {
+        $content = var_export($content, true);
+        // 写入配置文件
+        if (false !== file_put_contents($file_name, "<?php " . PHP_EOL . "return " . $content . ";")) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    /**
+     * 执行dep任务
+     * @param $task 任务名称
+     * @param $server 执行的服务器
+     * @return mixed
+     */
+    public static function runDep($task, $server) {
+        $deploy_file = include CONFIG_ROOT . DS . 'deploy.php';
+        $dep_cmd_path = $deploy_file['local_dep_bin'];
+        $dep_path = PROJECT_ROOT . DS . 'deploy';
+        exec("cd $dep_path && $dep_cmd_path $task $server", $result);
+        return $result;
+    }
+
+    /**
+     * 文件替换
+     * @param $file
+     * @param $replace_file
+     * @return bool
+     */
+    public static function replaceFile($file, $replace_file) {
+        if (!file_exists($file) || !is_file($file)) {
+            return false;
+        }
+        try {
+            // 判断替换文件是否存在
+            if (!file_exists($replace_file)) {
+                // 判断替换文件是目录还是文件
+                $file_explode = explode(DS, $replace_file);
+                // 是文件
+                if (strpos($file_explode[count($file_explode) - 1], '.') !== false) {
+                    $dir = rtrim($replace_file, DS . $file_explode[count($file_explode) - 1]);
+                } else {
+                    $dir = $replace_file;
+                }
+                // 创建目录 并 将文件复制到替换目录
+                exec("mkdir -p $dir && cp $file $dir");
+            } else {
+                // 将文件复制到替换目录
+                exec("cp $file $replace_file");
+            }
+        } catch (\Exception $exception) {
+            Log::error($exception->getTraceAsString());
+            return false;
+        }
+
+        return true;
+    }
 
 }

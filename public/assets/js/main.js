@@ -10,15 +10,16 @@ new Vue({
       project_name: '',
       repository: '',
       branch: '',
-      project_path: '/ac/code/release',
+      project_path: '/acs/code/release',
       replace_files: [
         {
           local_file: '',
           replace_file: ''
         },
       ], // 替换文件
+      remark: '', // 发版说明
     },
-    loading: false,
+    loading: false,// 加载中
     fileContentModal: {
       visible: false,
       index: 0,
@@ -184,7 +185,11 @@ new Vue({
         this.$Message.warning('请检查必填项');
         return;
       }
-      var formItem = this.formItem
+      that.loading = true
+      var formItem = {}
+      Object.keys(that.formItem).forEach(function(key) {
+        formItem[key] = that.formItem[key]
+      })
       var replace_files = []
       formItem.replace_files.forEach(function(item) {
         replace_files.push({
@@ -192,19 +197,18 @@ new Vue({
           replace_file: item.replace_file
         })
       })
+      formItem.replace_files = replace_files
       that.request.get({
         url: '/release',
         params: formItem,
         success: function(e, response) {
+          that.loading = false
           if (response.status === 'error') {
             return that.$Message.error(response.message)
           }
           console.log(response)
           that.$Message.info('发布成功')
         },
-        error: function(e, error) {
-          console.error(error, '---')
-        }
       })
     },
     // 重置
