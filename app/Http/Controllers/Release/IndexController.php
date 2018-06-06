@@ -33,7 +33,9 @@ class IndexController extends Controller
         if (true !== $err_msg = $this->_handleRelease()) {
             return $response->jsonError($err_msg);
         }
-        return $response->jsonSuccess();
+        return $response->jsonSuccess([
+            'release_project_name' => $this->_getReleaseProjectName()
+        ]);
     }
 
     // 检查当前是否有正在发布的项目

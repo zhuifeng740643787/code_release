@@ -20,6 +20,7 @@ new Vue({
       remark: '', // 发版说明
     },
     loading: false,// 加载中
+    loading_message: '加载中...',
     fileContentModal: {
       visible: false,
       index: 0,
@@ -55,6 +56,7 @@ new Vue({
         return;
       }
       that.loading = true
+      that.loading_message = '获取分支信息中...'
       that.request.get({
         url: '/git/branches',
         params: {
@@ -186,6 +188,7 @@ new Vue({
         return;
       }
       that.loading = true
+      that.loading_message = '提交中...'
       var formItem = {}
       Object.keys(that.formItem).forEach(function(key) {
         formItem[key] = that.formItem[key]
@@ -207,7 +210,7 @@ new Vue({
             return that.$Message.error(response.message)
           }
           console.log(response)
-          that.$Message.info('发布成功')
+          that.$Message.info('提交成功, 正在发布...')
         },
       })
     },

@@ -1,3 +1,4 @@
+#!/usr/local/bin/php
 <?php
 //入口文件
 ini_set('display_errors', 0);

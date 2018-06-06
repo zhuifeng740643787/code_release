@@ -130,7 +130,7 @@
           </div>
           <Spin fix v-show="loading">
             <Icon type="load-c" size=18 class="spin-icon-load"></Icon>
-            <p>加载中。。。</p>
+            <p>{{ loading_message }}</p>
           </Spin>
         </Card>
       </Content>

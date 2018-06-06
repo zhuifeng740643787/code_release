@@ -20,13 +20,11 @@ class InitProjectsCode extends Command
     {
         Utils::log('------------- init_projects start --------------');
         $app_config = $this->app->config->get('app');
-        $config_path = PROJECT_ROOT . DS . 'config';
-        // 默认deploy配置
-        $deploy_default_config_file = $config_path . DS . 'deploy_default.php';
-        $deploy_default_config = include_once $deploy_default_config_file;
-        $deploy_config_file = $config_path . DS . 'deploy.php';
         $repositories = $app_config['repositories'];
+        // 默认deploy配置
+        $deploy_config_file = CONFIG_ROOT . DS . 'deploy.php';
         $deploy_path = PROJECT_ROOT . DS . 'deploy';
+        $deploy_default_config = $this->app->config->get('deploy_default');
         $dep_cmd_path = $deploy_default_config['local_dep_bin'];
         foreach ($repositories as $project_name => $repository) {
             Utils::log("$repository start");
@@ -49,12 +47,7 @@ class InitProjectsCode extends Command
         $default_config['repository'] = $repository;
         $default_config['project_name'] = $project_name;
         $default_config['branch'] = $branch_name;
-        $content = var_export($default_config, true);
-        if (false !== file_put_contents($config_file, "<?php " . PHP_EOL . "return " . $content . ";")) {
-            return true;
-        }
-
-        return false;
+        return Utils::writeConfigFile($config_file, $default_config);
     }
 
 

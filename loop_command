@@ -1,0 +1,8 @@
+#!/bin/sh
+php_bin="/usr/local/bin/php"
+pwd=`pwd`
+command=$1
+while(true)
+    do ${php_bin} ${pwd}/run ${command}
+    sleep $2
+done

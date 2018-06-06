@@ -9,6 +9,7 @@ namespace App\Console;
 
 use App\Console\Commands\InitProjects;
 use App\Console\Commands\InitProjectsCode;
+use App\Console\Commands\LaunchReleaseJob;
 use App\Console\Commands\UpAndDeployCode;
 use App\Helper\Utils;
 
@@ -16,6 +17,7 @@ class Kernel {
 
     protected $commands = [
         InitProjectsCode::class,
+        LaunchReleaseJob::class,
         UpAndDeployCode::class,
     ];
 
