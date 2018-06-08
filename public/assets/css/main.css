@@ -13,7 +13,7 @@
 
 .form-item {
     display: flex;
-    margin: 10px;
+    margin: 15px;
     align-items: center;
 }
 
@@ -30,6 +30,7 @@
 
 .form-item .item-content {
     flex: 1;
+    overflow: hidden;
 }
 
 .card-wrapper {
@@ -52,14 +53,24 @@
     border-bottom: #ccccff 1px solid;
 
 }
+
 .item-wrapper.header {
     background-color: #ccccff;
     border: none;
 }
 
+.upload-click-box {
+    display: inline-block;
+}
+
 .item-wrapper .item-header {
     font-size: 16px;
     font-weight: 400;
+    display: inline-block;
+    margin-left: 10px;
+    cursor: pointer;
+    color: #ff5300;
+    padding-left: 10px;
 }
 
 .item-wrapper .item-main {
@@ -67,7 +78,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
+    height: 50px;
+    line-height: 50px;
 }
+
 .item-wrapper .item-action {
     width: 150px;
     display: inline-block;
@@ -82,7 +97,8 @@
 }
 
 .item-wrapper .left-box {
-    width: 400px;
+    max-width: 400px;
+    min-width: 200px;
 }
 
 .item-wrapper .center-box {
@@ -91,7 +107,9 @@
 
 .item-wrapper .right-box {
     flex: 1;
+    max-width: 500px;
 }
+
 .action-wrapper {
     display: flex;
     justify-content: center;
@@ -101,16 +119,43 @@
     border-top: 2px solid #cccccc;
 }
 
-.spin-icon-load{
+.spin-icon-load {
     animation: ani-spin 1s linear infinite;
 }
+
 @keyframes ani-spin {
-    from { transform: rotate(0deg);}
-    50%  { transform: rotate(180deg);}
-    to   { transform: rotate(360deg);}
+    from {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
-.spin-col{
+
+.spin-col {
     height: 100px;
     position: relative;
     border: 1px solid #eee;
+}
+
+.step-card-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.card-title {
+    display: inline-block;
+    font-size: 14px;
+}
+
+.card-loading-box {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.ivu-select-single .ivu-select-selection {
+    height: 33px !important;
 }

@@ -26,7 +26,8 @@ class InitProjectsCode extends Command
         $deploy_path = PROJECT_ROOT . DS . 'deploy';
         $deploy_default_config = $this->app->config->get('deploy_default');
         $dep_cmd_path = $deploy_default_config['local_dep_bin'];
-        foreach ($repositories as $project_name => $repository) {
+        foreach ($repositories as $project_name => $item) {
+            $repository = $item['address'];
             Utils::log("$repository start");
             // 重置配置文件
             $reset_config = $this->_makeDeployConfig($deploy_default_config, $deploy_config_file, $project_name, $repository, 'master');

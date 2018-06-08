@@ -19,7 +19,7 @@
             <div class="form-item">
               <label for="" class="form-label" required>服务器</label>
               <div class="item-content">
-                <i-select v-model="formItem.host" filterable style="width:300px">
+                <i-select v-model="formItem.host" filterable style="width:600px">
                   <i-option v-for="(item,key) in selectHosts" :value="key" :key="key">{{ key }} - {{ item.host }}</i-option>
                 </i-select>
               </div>
@@ -28,7 +28,7 @@
               <label for="" class="form-label" required>git仓库地址</label>
               <div class="item-content">
                 <i-select v-model="formItem.repository" v-on:on-change="handleRepositoryChange" filterable style="width:500px">
-                  <i-option v-for="(item, key) in selectRepositories" :value="key" :key="key">{{ key }} - {{ item }}</i-option>
+                  <i-option v-for="(item, key) in selectRepositories" :value="key" :key="key">{{ key }} - {{ item['address'] }}</i-option>
                 </i-select>
               </div>
             </div>
@@ -96,7 +96,7 @@
                             <Icon type="arrow-right-a" :size="30" color="#ff0060"></Icon>
                           </div>
                           <div class="right-box">
-                            <i-input v-model="item.replace_file" placeholder="被替换的文件名或存放文件的目录，从项目目录的下一层写起" style="width: 500px">
+                            <i-input v-model="item.replace_file" placeholder="被替换的文件名或存放文件的目录，从项目目录的下一层写起" >
                               <span slot="prepend">{{formItem.project_name}}/<span>
                             </i-input>
                           </div>
@@ -144,6 +144,29 @@
     @on-ok="handleChangeFileContent(fileContentModal.index)"
     :width="80">
     <i-input v-model="fileContentModal.content" :autosize="{minRows: 10}" size="large" type="textarea"></i-input>
+  </Modal>
+
+  <Modal
+    width="1000"
+    :mask-closable="false"
+    :closable="true"
+    v-model="progressModal.visible"
+    title="发布进度"
+    >
+      <Card v-for="(item, host) in progressModal.hosts">
+        <div slot="title" class="step-card-wrapper">
+          <span class="card-title">{{ host }}</span>
+          <div class="card-loading-box">
+            <Spin v-show="true">
+              <Icon type="load-c" size=10 class="spin-icon-load"></Icon>
+            </Spin>
+          </div>
+        </div>
+        <Steps :current="item.rate">
+          <Step v-for="(content, index) in progressModal.steps" :title="index<item.rate?'已完成':(index==item.rate?'进行中':'待进行')" :content="content"></Step>
+        </Steps>
+      </Card>
+      <p slot="footer"></p>
   </Modal>
 </div>
 

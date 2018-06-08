@@ -2,38 +2,32 @@
 
 namespace Deployer;
 
-use Kafka\Exception;
+require 'recipe/common.php';
 
 define('DS', DIRECTORY_SEPARATOR);
 define('TASK_SUCCESS', 1);
 define('TASK_ERROR', 0);
 
+set('ssh_type', 'native');
+set('ssh_multiplexing', true);
+
 $deploy_config = include_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR  . 'deploy.php';
+$remote_servers = $deploy_config['remote_servers'];
+
+// 设置变量
 foreach ($deploy_config as $key => $value) {
     set($key, $value);
 }
-//set('repository', 'xxx'); // 仓库地址
-//set('project_name', 'xxx'); // 项目名称, 也用作项目的目录名称
-//set('branch', 'xxx'); // 分支名称
-//set('local_git_bin', '/usr/local/bin/git'); // git命令地址
-//set('local_zip_bin', '/usr/bin/zip'); // zip命令地址
-//set('remote_unzip_bin', '/usr/bin/unzip'); // unzip命令地址
-//set('remote_host', 'xxx'); // 远程服务器IP
-//set('remote_user', 'xxx'); // 登录远程服务器的用户名称
-//set('remote_code_release_path', '/acs/code/releases'); // 远程服务器的项目存放路径
-//set('local_tmp_code_path', '../storage/tmp/code'); // 项目临时目录
-//set('local_tmp_zip_path', '../storage/tmp/zip');// 项目压缩后存放的临时目录
-//set('local_tmp_log_file', '../storage/tmp/log/release.log');// 发布日志
-//set('identity_file_path', '../config/ssh/id_rsa'); // ssh私钥
 
-// Hosts
-localhost()->stage('local');
-
-// Hosts
-host('server')
-    ->hostname(get('remote_host'))
-    ->user(get('remote_user'))
-    ->identityFile(get('identity_file_path'));
+// 设置服务器
+// 本地
+localServer('local')->stage('local');
+// 服务器组
+foreach ($remote_servers as $server_name => $server) {
+    server($server_name, $server['host'])
+        ->user($server['user'])
+        ->identityFile(get('identity_file_path'));
+}
 
 // Tasks, 本地执行
 task('zip_and_up_code', [
@@ -155,8 +149,11 @@ task('zip_code', function () {
     }
     $zip = realpath(get('local_zip_bin'));
     $zip_file_name = realpath(get('local_tmp_zip_path')) . DS . $last_release_file . '.zip';
-    // 删除git目录，并压缩到zip目录
-    run("cd $release_path && rm -rf $last_release_file" . DS . ".git && $zip -r $zip_file_name $last_release_file --exclude \\*.log");
+    // 判断文件是否已存在（被其他任务执行过）
+    if (!file_exists($zip_file_name)) {
+        // 删除git目录，并压缩到zip目录
+        run("cd $release_path && rm -rf $last_release_file" . DS . ".git && $zip -r $zip_file_name $last_release_file --exclude \\*.log");
+    }
     writeLog('zip_code end');
     echo TASK_SUCCESS;
     return TASK_SUCCESS;
@@ -171,38 +168,31 @@ task('up_code', function () {
 
     $cp_zip_file = $local_tmp_zip_path . DIRECTORY_SEPARATOR . $zip_file_name;
     $identity_file_path = realpath(get('identity_file_path'));
-    $remote_ssh = get('remote_user') . '@' . get('remote_host');
+    $remote_servers = get("remote_servers");
+    // 要发版的服务器信息
+    if (!isset($remote_servers[get('release_server_name')])) {
+        writeLog('up_code error: servername not find');
+        echo TASK_ERROR;
+        return TASK_ERROR;
+    }
+    $remote_server = $remote_servers[get('release_server_name')];
+    $remote_ssh = $remote_server['user'] . '@' . $remote_server['host'];
     $remote_code_release_path = get('remote_code_release_path');
 
     // 检查并创建代码目录
     run("ssh $remote_ssh '[ -d $remote_code_release_path ] && echo 1 || mkdir -p $remote_code_release_path'");
     // 上传代码
     run("scp -i $identity_file_path $cp_zip_file $remote_ssh:$remote_code_release_path", ['timeout' => 600, 'tty' => true]);
-    // 将要发布的zip名称写入日志，且传到远程服务器
-    $release_txt_file = get('local_tmp_release_path') . DS . get('last_release_log_file');
-    run("scp -i $identity_file_path $release_txt_file $remote_ssh:$remote_code_release_path", ['timeout' => 60, 'tty' => true]);
     writeLog('up_code end');
     echo TASK_SUCCESS;
     return TASK_SUCCESS;
 });
 
-// 上传代码失败
-task('up_code_fail', function() {
-    writeLog('error: up_code_fail');
-});
-fail('up_code', 'up_code_fail');
-
 // 解压代码
 task('unzip_and_deploy_code', function() {
     $remote_code_release_path = get('remote_code_release_path');
     cd($remote_code_release_path);
-    $release_txt_file = $remote_code_release_path . '/' . get('last_release_log_file');
-    // 判断文件是否存在
-    if (!test("[[ -e $release_txt_file ]]")) {
-        throw new Exception('文件不存在');
-    }
-    // 先将代码放到临时目录
-    $release_file = run("cat $release_txt_file");
+    $release_file = get("release_project_name");
     $zip_file = $release_file . '.zip';
     $zip_file_path = $remote_code_release_path . '/' . $zip_file;
     // 判断zip文件是否存在
@@ -215,6 +205,16 @@ task('unzip_and_deploy_code', function() {
     // 移动代码文件
     $project_name = get('project_name');
     $project_path = $remote_code_release_path . '/' . $project_name;
+
+    // 判断是否有已存在的项目文件，有则将一些静态配置文件覆盖到当前项目
+    if (test("[[ -e $project_path ]]")) {
+        foreach (get('static_files') as $static_file){
+            if (test("[[ -e $project_path\/$static_file ]]")) {
+                run("cp $project_path\/$static_file $release_file\/$static_file");
+            }
+        }
+    }
+
     $version_project_name = $project_path . '_v'.date('YmdHis');
     if (test("[[ -e $project_path ]]")) {
         run("mv $project_path {$version_project_name} && mv $release_file $project_path");
@@ -270,15 +270,12 @@ task('valid_server', function() {
 
 // 获取要发布的文件名
 function getLastReleaseFile() {
-    $file = get('local_tmp_release_path') . DS . get('last_release_log_file');
+    $release_project_name = get('release_project_name');
+    $file = get('local_tmp_release_path') . DS . $release_project_name;
     if (!file_exists($file)) {
         throw new \Exception('要发布的文件不存在');
     }
-    $file_name = file_get_contents($file);
-    if (!file_exists(get('local_tmp_release_path') . DS . $file_name)) {
-        throw new \Exception('要发布的文件不存在');
-    }
-    return $file_name;
+    return $release_project_name;
 }
 
 /**

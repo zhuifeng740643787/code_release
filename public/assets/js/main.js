@@ -6,7 +6,7 @@ new Vue({
   el: '#main',
   data: {
     formItem: {
-      host: '',
+      host: '', // 要发布的服务器
       project_name: '',
       repository: '',
       branch: '',
@@ -26,6 +26,28 @@ new Vue({
       index: 0,
       title: '文件详情',
       content: '',
+    },
+    // 发布进度modal
+    progressModal: {
+      visible: false, // 控制modal显示
+      steps: [
+        '拉取分支代码',
+        '打包代码',
+        '上传至服务器',
+        '服务器端解压并部署代码包',
+        '保留历史版本'
+      ], // 发布的步骤
+      hosts: {
+        'host1': {
+          rate: 1, // 当前进度
+          error: 'xx' // 是否有错，有错则停止
+        },
+        'host2': {
+          host: '123',
+          rate: 3, // 当前进度
+          error: 'xx' // 是否有错，有错则停止
+        },
+      }
     },
     selectHosts: {}, // 服务器列表
     selectRepositories: [], // 仓库列表
@@ -200,6 +222,8 @@ new Vue({
           replace_file: item.replace_file
         })
       })
+      // 当前只能上传一个
+      formItem.hosts = [formItem.host]
       formItem.replace_files = replace_files
       that.request.get({
         url: '/release',

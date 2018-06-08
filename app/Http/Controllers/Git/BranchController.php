@@ -28,7 +28,7 @@ class BranchController extends Controller
         }
 
         $deploy_default_config = $request->app->config->get('deploy_default');
-        $deploy_default_config['repository'] = $repositories[$project_name];
+        $deploy_default_config['repository'] = $repositories[$project_name]['address'];
         $deploy_default_config['project_name'] = $project_name;
 
         // 写入配置文件

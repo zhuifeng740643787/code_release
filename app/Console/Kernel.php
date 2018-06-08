@@ -10,6 +10,7 @@ namespace App\Console;
 use App\Console\Commands\InitProjects;
 use App\Console\Commands\InitProjectsCode;
 use App\Console\Commands\LaunchReleaseJob;
+use App\Console\Commands\Test;
 use App\Console\Commands\UpAndDeployCode;
 use App\Helper\Utils;
 
@@ -19,6 +20,7 @@ class Kernel {
         InitProjectsCode::class,
         LaunchReleaseJob::class,
         UpAndDeployCode::class,
+        Test::class
     ];
 
     public function handle($app, $command_name, $params) {
