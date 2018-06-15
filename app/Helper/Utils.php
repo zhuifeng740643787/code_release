@@ -5,18 +5,21 @@
  * Date: 2018/5/22
  * Time: 下午4:46
  */
+
 namespace App\Helper;
 
 use App\Lib\Log;
 
-class Utils {
+class Utils
+{
 
     /**
      * 打印日志
      * @param $message 日志内容
      * @param bool $show_time 是否显示时间
      */
-    public static function log($message, $show_time = true) {
+    public static function log($message, $show_time = true)
+    {
         if ($show_time) {
             print_r(date('Y-m-d H:i:s'));
             print_r("\t");
@@ -33,7 +36,8 @@ class Utils {
      * @param $content
      * @return bool
      */
-    public static function writeConfigFile($file_name, $content) {
+    public static function writeConfigFile($file_name, $content)
+    {
         $content = var_export($content, true);
         // 写入配置文件
         if (false !== file_put_contents($file_name, "<?php " . PHP_EOL . "return " . $content . ";")) {
@@ -46,16 +50,16 @@ class Utils {
 
     /**
      * 执行dep任务
+     * @param $deploy_path 执行dep任务的目录
      * @param $task 任务名称
      * @param $server 执行的服务器
      * @return mixed
      */
-    public static function runDep($task, $server) {
-        $deploy_file = include CONFIG_ROOT . DS . 'deploy.php';
-        $dep_cmd_path = $deploy_file['local_dep_bin'];
-        $dep_path = PROJECT_ROOT . DS . 'deploy';
-        exec("cd $dep_path && $dep_cmd_path $task $server", $result);
-        return $result;
+    public static function runDep($deploy_path, $task, $server)
+    {
+        $deploy_config = app()->config->get('deploy');
+        $dep_bin = $deploy_config['local_dep_bin'];
+        return self::runExec("cd $deploy_path && $dep_bin $task $server");
     }
 
     /**
@@ -64,7 +68,8 @@ class Utils {
      * @param $replace_file
      * @return bool
      */
-    public static function replaceFile($file, $replace_file) {
+    public static function replaceFile($file, $replace_file)
+    {
         if (!file_exists($file) || !is_file($file)) {
             return false;
         }
@@ -92,5 +97,23 @@ class Utils {
 
         return true;
     }
+
+
+    /**
+     * 执行系统命令
+     * @param $command
+     * @return bool
+     */
+    public static function runExec($command)
+    {
+        exec($command, $output, $return_code);
+
+        if ($return_code !== 0) {
+            return false;
+        }
+        return $output;
+    }
+
+
 
 }

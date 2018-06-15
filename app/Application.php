@@ -2,6 +2,7 @@
 namespace App;
 use App\Lib\Config;
 use App\Lib\Console;
+use App\Lib\Database;
 use App\Lib\Log;
 use App\Lib\Request;
 use App\Lib\Response;
@@ -21,30 +22,50 @@ class Application {
     public $response;
     public $router;
     public $console;
+    /**
+     * @var View
+     */
     public $view;
+    /**
+     * @var Config
+     */
     public $config;
     public $log;
+    /**
+     * @var Database
+     */
+    public $db;
 
-    public function bootHttp($route_path) {
+    public function __construct($config_path)
+    {
+        $this->setConfig($config_path);
+        $this->setLog();
+        $this->setDB();
+    }
+
+    protected function setConfig($config_path) {
+        $this->config = new Config($this, $config_path);
+    }
+
+    protected function setDB() {
+        $this->db = new Database($this);
+    }
+
+    protected function setLog() {
+        $this->log = new Log($this);
+    }
+
+    public function bootHttp() {
+        $route_path = require_once PROJECT_ROOT . DS . 'bootstrap' . DS . 'routes.php';
+        $view_path = PROJECT_ROOT . DS . 'resource' . DS . 'views';
         $this->request = new Request($this);
         $this->response = new Response($this);
         $this->router = new Router($this, $route_path);
+        $this->view = new View($this, $view_path);
     }
 
     public function bootConsole($arguments) {
         $this->console = new Console($this, $arguments);
-    }
-
-    public function setView($view_path) {
-        $this->view = new View($this, $view_path);
-    }
-
-    public function setConfig($config_path) {
-        $this->config = new Config($this, $config_path);
-    }
-
-    public function setLog() {
-        $this->log = new Log($this);
     }
 
     public function handleRequest() {

@@ -19,23 +19,17 @@
             <div class="form-item">
               <label for="" class="form-label" required>服务器</label>
               <div class="item-content">
-                <i-select v-model="formItem.host" filterable style="width:600px">
-                  <i-option v-for="(item,key) in selectHosts" :value="key" :key="key">{{ key }} - {{ item.host }}</i-option>
+                <i-select v-model="formItem.server_ids" multiple filterable style="width:600px">
+                  <i-option v-for="(item,key) in selectServers" :value="item.id" :key="key">{{ item.name }} - {{ item.host }}</i-option>
                 </i-select>
               </div>
             </div>
             <div class="form-item">
-              <label for="" class="form-label" required>git仓库地址</label>
+              <label for="" class="form-label" required>项目</label>
               <div class="item-content">
-                <i-select v-model="formItem.repository" v-on:on-change="handleRepositoryChange" filterable style="width:500px">
-                  <i-option v-for="(item, key) in selectRepositories" :value="key" :key="key">{{ key }} - {{ item['address'] }}</i-option>
+                <i-select v-model="formItem.project_id" v-on:on-change="handleProjectChange" filterable style="width:500px">
+                  <i-option v-for="(item, key) in selectProjects" :value="item.id" :key="key">{{ item.name }} - {{ item.repository }}</i-option>
                 </i-select>
-              </div>
-            </div>
-            <div class="form-item">
-              <label for="" class="form-label" required>项目名称</label>
-              <div class="item-content">
-                <i-input disabled v-model="formItem.project_name" placeholder="项目名称，英文" style="width: 300px"></i-input>
               </div>
             </div>
             <div class="form-item">

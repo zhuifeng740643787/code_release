@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Release;
 
+use App\Helper\Code;
 use App\Helper\Task;
 use App\Helper\Utils;
 use App\Http\Controllers\Controller;
@@ -94,7 +95,7 @@ class IndexController extends Controller
         $task_path = $deploy_config['local_tmp_task_path'];
         foreach ($this->_params['hosts'] as $host) {
             $task_name = Task::makeTaskName($release_project_name, $host);
-            $release_log_file = $task_path. DS . $task_name;
+            $release_log_file = $task_path . DS . $task_name;
             // 创建任务
             file_put_contents($release_log_file, '');
         }
@@ -141,12 +142,12 @@ class IndexController extends Controller
     }
 
     // 版本发布说明
-    private function _releaseRemarkFormat()
+    private function _releaseRemarkFormat($project_name)
     {
         // 获取git的commit head
-        $commit_head = Utils::runDep('get_git_commit_head', 'local');
+        $commit_head = Code::getGitHeadCommit($project_name);
         return '# version_' . $this->_params['branch'] . '_' . $this->version_num . PHP_EOL
-            . '- ' . $commit_head[1] . PHP_EOL
+            . '- ' . $commit_head[0] . PHP_EOL
             . '- ' . $this->_params['remark'] . PHP_EOL
             . '- ' . 'params: ' . var_export($this->_params, true) . PHP_EOL;
     }
@@ -182,13 +183,9 @@ class IndexController extends Controller
     }
 
     // 检查服务器是否可用
-    private function _checkHostValid($server)
+    private function _checkHostValid($server_name, $host, $user)
     {
-        $ret = Utils::runDep('valid_server', $server);
-        if (!$ret[1]) {
-            return false;
-        }
-        return true;
+        return Code::isServerVaild($server_name, $host, $user);
     }
 
     // 接收参数
@@ -246,5 +243,7 @@ class IndexController extends Controller
         }
         return true;
     }
+
+
 
 }

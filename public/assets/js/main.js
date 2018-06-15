@@ -6,9 +6,8 @@ new Vue({
   el: '#main',
   data: {
     formItem: {
-      host: '', // 要发布的服务器
-      project_name: '',
-      repository: '',
+      server_ids: [], // 要发布的服务器列表
+      project_id: 0,
       branch: '',
       project_path: '/acs/code/release',
       replace_files: [
@@ -37,7 +36,7 @@ new Vue({
         '服务器端解压并部署代码包',
         '保留历史版本'
       ], // 发布的步骤
-      hosts: {
+      servers: {
         'host1': {
           rate: 1, // 当前进度
           error: 'xx' // 是否有错，有错则停止
@@ -49,32 +48,32 @@ new Vue({
         },
       }
     },
-    selectHosts: {}, // 服务器列表
-    selectRepositories: [], // 仓库列表
+    selectServers: {}, // 服务器列表
+    selectProjects: [], // 项目列表
     selectBranches: [], // 分支列表
     allBranches: {}, // 所有仓库对应的分支
   },
   computed: {
     canSubmit: function() {
       var formItem = this.formItem
-      return formItem.host && formItem.project_name && formItem.repository && formItem.branch && formItem.project_path
+      return formItem.server_ids.length > 0 && formItem.project_id && formItem.branch && formItem.project_path
     }
   },
   methods: {
-    // 仓库改变事件
-    handleRepositoryChange: function(value) {
-      that.formItem.project_name = value
+    // 项目改变事件
+    handleProjectChange: function(value) {
+      that.formItem.project_id = value
       that.showBranches()
     },
     // 显示所有分支
     showBranches: function() {
-      if (!that.formItem.project_name) {
-        return that.$Message.error('请先选择git仓库')
+      if (!that.formItem.project_id) {
+        return that.$Message.error('请先选择项目')
       }
 
       // 判断分支是否已加载过
-      if (that.allBranches[that.formItem.project_name] !== undefined) {
-        that.selectBranches = that.allBranches[that.formItem.project_name];
+      if (that.allBranches[that.formItem.project_id] !== undefined) {
+        that.selectBranches = that.allBranches[that.formItem.project_id];
         return;
       }
       that.loading = true
@@ -82,7 +81,7 @@ new Vue({
       that.request.get({
         url: '/git/branches',
         params: {
-          project_name: that.formItem.project_name
+          project_id: that.formItem.project_id
         },
         success: function(e, response) {
           that.loading = false
@@ -91,7 +90,7 @@ new Vue({
           }
 
           that.selectBranches = response.result.rows
-          that.allBranches[that.formItem.project_name] = response.result.rows
+          that.allBranches[that.formItem.project_id] = response.result.rows
         }
       })
     },
@@ -223,7 +222,7 @@ new Vue({
         })
       })
       // 当前只能上传一个
-      formItem.hosts = [formItem.host]
+      formItem.servers = [formItem.host]
       formItem.replace_files = replace_files
       that.request.get({
         url: '/release',
@@ -268,8 +267,8 @@ new Vue({
           return that.$Message.error(response.message)
         }
 
-        that.selectHosts = response.result.hosts
-        that.selectRepositories = response.result.repositories
+        that.selectServers = response.result.servers
+        that.selectProjects = response.result.projects
       },
       error: function(e, error) {
         console.error(error, '---')

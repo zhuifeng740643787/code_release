@@ -1,7 +1,6 @@
 <?php
 
 namespace Deployer;
-
 require 'recipe/common.php';
 
 define('DS', DIRECTORY_SEPARATOR);
@@ -11,7 +10,7 @@ define('TASK_ERROR', 0);
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
 
-$deploy_config = include_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR  . 'deploy.php';
+$deploy_config = include_once 'config.php';
 $remote_servers = $deploy_config['remote_servers'];
 
 // 设置变量
@@ -40,124 +39,6 @@ task('server_release', [
     'unzip_and_deploy_code',
     'remain_history_version'
 ]);
-
-// 初始化仓库代码,有代码的话跳过，拉取master分支
-task('init_repository_code', function() {
-    writeLog('init_repository_code start');
-    $git = get('local_git_bin');
-    $code_path = realpath(get('local_tmp_code_path')) . DIRECTORY_SEPARATOR . get('project_name');
-    if (!file_exists($code_path)) {
-        run("mkdir -p $code_path");
-    }
-    // 判断是否有代码, 没有则拉取master分支的代码
-    if (!file_exists($code_path . DIRECTORY_SEPARATOR . '.git')) {
-        run("cd $code_path && rm -rf ./* && rm -rf ./.git && $git clone {{repository}} $code_path");
-    }
-    writeLog('init_repository_code end');
-});
-
-// 获取仓库的所有分支
-task('get_repository_branches', function() {
-    writeLog('get_repository_branches start');
-    $git = get('local_git_bin');
-    $code_path = realpath(get('local_tmp_code_path')) . DIRECTORY_SEPARATOR . get('project_name');
-    if (!file_exists($code_path)) {
-        run("mkdir -p $code_path");
-    }
-    // 判断是否有代码, 没有则拉取master分支的代码
-    if (!file_exists($code_path . DIRECTORY_SEPARATOR . '.git')) {
-        run("cd $code_path && rm -rf ./* && rm -rf ./.git && $git clone {{repository}} $code_path");
-    }
-
-    echo run("cd $code_path && $git branch -a");
-    writeLog('get_repository_branches end');
-    exit;
-});
-
-// 获取仓库提交的head信息
-task('get_git_commit_head', function() {
-    writeLog('get_git_commit_head start');
-    $git = get('local_git_bin');
-    $code_path = realpath(get('local_tmp_code_path')) . DIRECTORY_SEPARATOR . get('project_name');
-    if (!file_exists($code_path)) {
-        run("mkdir -p $code_path");
-    }
-    // 判断是否有代码, 没有则拉取master分支的代码
-    if (!file_exists($code_path . DIRECTORY_SEPARATOR . '.git')) {
-        run("cd $code_path && rm -rf ./* && rm -rf ./.git && $git clone {{repository}} $code_path");
-    }
-
-    echo run("cd $code_path && $git log |head -n 1");
-    writeLog('get_git_commit_head end');
-    exit;
-});
-
-// 获取分支最新代码
-task('get_branch_code', function () {
-    writeLog('get_branch_code start');
-    $git = get('local_git_bin');
-    $code_path = realpath(get('local_tmp_code_path')) . DIRECTORY_SEPARATOR . get('project_name');
-    if (!file_exists($code_path)) {
-        run("mkdir -p $code_path");
-    }
-    // 判断是否有代码, 没有则拉取master分支的代码
-    if (!file_exists($code_path . DIRECTORY_SEPARATOR . '.git')) {
-        run("cd $code_path && rm -rf ./* && rm -rf ./.git && $git clone {{repository}} $code_path");
-    }
-
-    // 需要拉取的分支
-    $branch = str_replace('remotes/origin/', '', get('branch'));
-    // 判断本地是否已含有所要拉取的分支
-    $local_branches = trim(run("cd $code_path && $git branch --column"));
-    $local_branch_arr = explode(' ', $local_branches);
-
-    // 当前分支名称
-    $current_branch = $local_branch_arr[array_search('*', $local_branch_arr)+1];
-
-    // 是当前分支，拉取最新代码
-    if ($current_branch == $branch) {
-        run("cd $code_path && $git pull");
-        writeLog('get_branch_code end');
-        echo TASK_SUCCESS;
-        exit;
-    }
-
-    // clean当前分支的代码,以便切换分支
-    if (!checkBranchClean($code_path, $git)) {
-        run("cd $code_path && $git add -A && $git stash");
-    }
-    echo $branch;
-    // 判断是否存在于本地分支
-    if (!in_array($branch, $local_branch_arr)) {
-        run("cd $code_path && $git checkout remotes/origin/$branch -b $branch");
-    } else {
-        run("cd $code_path && $git checkout $branch && $git pull");
-    }
-    echo TASK_SUCCESS;
-    writeLog('get_branch_code end');
-    exit;
-});
-
-// 压缩代码
-task('zip_code', function () {
-    writeLog('zip_code start');
-    $release_path = realpath(get('local_tmp_release_path'));
-    $last_release_file = getLastReleaseFile();
-
-    if (false === $last_release_file) {
-        throw new \Exception('没有要发布的代码');
-    }
-    $zip = realpath(get('local_zip_bin'));
-    $zip_file_name = realpath(get('local_tmp_zip_path')) . DS . $last_release_file . '.zip';
-    // 判断文件是否已存在（被其他任务执行过）
-    if (!file_exists($zip_file_name)) {
-        // 删除git目录，并压缩到zip目录
-        run("cd $release_path && rm -rf $last_release_file" . DS . ".git && $zip -r $zip_file_name $last_release_file --exclude \\*.log");
-    }
-    writeLog('zip_code end');
-    echo TASK_SUCCESS;
-    return TASK_SUCCESS;
-});
 
 // 上传代码
 task('up_code', function () {
@@ -258,45 +139,3 @@ task('remain_history_version', function() {
     return TASK_SUCCESS;
 });
 
-// 检查服务器是否可用
-task('valid_server', function() {
-    try {
-        commandExist("pwd");
-    } catch (\Exception $exception) {
-        echo TASK_ERROR;exit;
-    }
-    echo TASK_SUCCESS;exit;
-});
-
-// 获取要发布的文件名
-function getLastReleaseFile() {
-    $release_project_name = get('release_project_name');
-    $file = get('local_tmp_release_path') . DS . $release_project_name;
-    if (!file_exists($file)) {
-        throw new \Exception('要发布的文件不存在');
-    }
-    return $release_project_name;
-}
-
-/**
- * 判断分支是否有未提交的代码
- * @param $code_path
- * @param $git
- * @return bool
- */
-function checkBranchClean($code_path, $git) {
-    $status = run("cd $code_path && $git status");
-    return strpos($status, 'working tree clean') !== false;
-}
-
-/**
- * 写入日志
- * @param $message
- */
-function writeLog($message) {
-    if (is_array($message)) {
-        $message = json_encode($message);
-    }
-    $message = date('Y-m-d H:i:s ') . get('project_name') . ' ' . get('branch') . ' ' . $message . PHP_EOL;
-    file_put_contents(get('local_tmp_log_file'), $message, FILE_APPEND);
-}

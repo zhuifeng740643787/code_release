@@ -8,15 +8,18 @@
 return [
     'repository' => '', // 仓库地址
     'project_name' => '', // 项目名称, 也用作项目的目录名称
+    'use' => 'branch', // 使用branch还是tag
     'branch' => 'master', // 分支名称
-    'local_git_bin' => '/usr/local/bin/git', // git命令地址
-    'local_zip_bin' => '/usr/bin/zip', // zip命令地址
-    'remote_unzip_bin' => '/usr/bin/unzip', // unzip命令地址
-    'local_dep_bin' => '/usr/local/bin/dep', // dep命令地址
+    'tag' => '', // tag名称
+    'local_git_bin' => env('GIT_BIN', '/usr/local/bin/git'), // git命令地址
+    'local_zip_bin' => env('ZIP_BIN', '/usr/bin/zip'), // zip命令地址
+    'remote_unzip_bin' => env('UNZIP_BIN', '/usr/bin/unzip'), // unzip命令地址
+    'local_dep_bin' => env('DEP_BIN', '/usr/local/bin/dep'), // dep命令地址
     'remote_servers' => [
         'server1' => [
             'host' => '', // 远程服务器IP
             'user' => '', // 登录远程服务器的用户名称
+            'password' => '', // 登录远程服务器的密码
         ],
     ],
     'remote_code_release_path' => '/acs/code/releases', // 远程服务器的项目存放路径

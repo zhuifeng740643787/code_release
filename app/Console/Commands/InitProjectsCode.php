@@ -9,6 +9,7 @@
 namespace App\Console\Commands;
 
 use App\Helper\Utils;
+use App\Model\Project;
 
 class InitProjectsCode extends Command
 {
@@ -19,39 +20,43 @@ class InitProjectsCode extends Command
     public function run()
     {
         Utils::log('------------- init_projects start --------------');
-        $app_config = $this->app->config->get('app');
-        $repositories = $app_config['repositories'];
+        $projects = Project::allEnables();
         // 默认deploy配置
-        $deploy_config_file = CONFIG_ROOT . DS . 'deploy.php';
-        $deploy_path = PROJECT_ROOT . DS . 'deploy';
-        $deploy_default_config = $this->app->config->get('deploy_default');
-        $dep_cmd_path = $deploy_default_config['local_dep_bin'];
-        foreach ($repositories as $project_name => $item) {
-            $repository = $item['address'];
-            Utils::log("$repository start");
-            // 重置配置文件
-            $reset_config = $this->_makeDeployConfig($deploy_default_config, $deploy_config_file, $project_name, $repository, 'master');
-            // 执行拉取任务
-            if (!$reset_config) {
-                Utils::log("$repository 重置失败");
-                continue;
-            }
-            $result = exec("cd $deploy_path && $dep_cmd_path init_repository_code local");
-            Utils::log("$repository $result end");
+        foreach ($projects as $project) {
+            $project_name = $project->name;
+            $repository = $project->repository;
+            Utils::log("project $project_name start");
+            $this->_getCode($project_name, $repository);
+            Utils::log("project $project_name end");
         }
         Utils::log('------------- init_projects end --------------');
     }
 
-
-    // 重新设置deploy配置，并写入文件
-    private function _makeDeployConfig($default_config, $config_file, $project_name, $repository, $branch_name) {
-        $default_config['repository'] = $repository;
-        $default_config['project_name'] = $project_name;
-        $default_config['branch'] = $branch_name;
-        return Utils::writeConfigFile($config_file, $default_config);
+    // 初始化仓库代码,有代码的话跳过，拉取master分支
+    private function _getCode($project_name, $repository) {
+        $deploy_config = app()->config->get('deploy');
+        $git = $deploy_config['local_git_bin'];
+        $code_path = realpath($deploy_config['local_tmp_code_path']) . DIRECTORY_SEPARATOR . $project_name;
+        if (!file_exists($code_path)) {
+            if (false === Utils::runExec("mkdir -p $code_path ")) {
+                Utils::log('------------- init_projects ' . $project_name . ' error: 执行有误，无法创建文件--------------');
+                return;
+            }
+        }
+        // 判断是否有代码, 没有则拉取master分支的代码
+        if (!file_exists($code_path . DIRECTORY_SEPARATOR . '.git')) {
+            Utils::log('------------- init_projects ' . $project_name . ' info: 代码拉取开始 --------------');
+            $ret = Utils::runExec("cd $code_path && rm -rf ./* && rm -rf ./.git && $git clone $repository $code_path");
+            if (false === $ret) {
+                Utils::log('------------- init_projects ' . $project_name . ' error: 代码拉取失败 --------------');
+                return;
+            } else {
+                Utils::log('------------- init_projects ' . $project_name . ' success : 代码拉取成功 --------------');
+            }
+        } else {
+            Utils::log('------------- init_projects ' . $project_name . ' info: 代码已存在 --------------');
+        }
     }
-
-
 
 
 }
