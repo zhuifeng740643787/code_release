@@ -14,15 +14,19 @@ class IndexController extends Controller
     protected $request;
     private $_params = [];
     protected $version_num = '';//版本号
+    protected $servers = []; // 服务器列表
+
 
     public function index(Request $request, Response $response)
     {
+        // http://release.mc3local.com/release?server_ids=[1,3]&project_path=/acs/code/release1&remark=asda%E5%A4%A7%E8%90%A8%E8%BE%BE&projects=[{%22id%22:1,%22branch_tag%22:%22branch-develop%22,%22replace_files%22:[{%22local_file%22:%2220180620/mc3/aa.txt%22,%22replace_file%22:%22test%22},{%22local_file%22:%2220180620/mc3/bb.txt%22,%22replace_file%22:%22asd%22}]},{%22id%22:2,%22branch_tag%22:%22branch-Branch_Develop_mc3%22,%22replace_files%22:[{%22local_file%22:%2220180620/mid_src/aa.txt%22,%22replace_file%22:%22aa%22}]}]
+
         $this->request = $request;
         // 生成版本号
         $this->version_num = date('YmdHis');
         // 初始化参数
         $this->_initParams($request);
-
+        return $response->jsonSuccess($this->_params);
         // 参数合法性检查
         if (true !== $check = $this->_checkParams()) {
             return $response->jsonError($check);
@@ -180,33 +184,28 @@ class IndexController extends Controller
     // 接收参数
     private function _initParams()
     {
-        $this->_params['branch'] = trim($this->request->get('branch', ''));
-        $this->_params['hosts'] = json_decode(trim($this->request->get('hosts', '')));
-        $this->_params['project_name'] = trim($this->request->get('project_name', ''));
+        $this->_params['server_ids'] = json_decode(trim($this->request->get('server_ids', '')));
+        $this->_params['projects'] = json_decode(trim($this->request->get('projects', '')));
         $this->_params['project_path'] = trim($this->request->get('project_path', ''));
-        $this->_params['repository'] = trim($this->request->get('repository', ''));
         $this->_params['remark'] = trim($this->request->get('remark', ''));
-        $this->_params['replace_files'] = json_decode(trim($this->request->get('replace_files', '')), true);
     }
 
     // 检查参数
     private function _checkParams()
     {
-        if (empty($this->_params['branch'])) {
-            return '请选择分支';
-        }
-        if (empty($this->_params['hosts'])) {
+        if (empty($this->_params['server_ids'])) {
             return '请选择服务器';
         }
-        if (empty($this->_params['project_name'])) {
-            return '请填写项目名称';
+        if (empty($this->_params['projects'])) {
+            return '请选择项目';
         }
         if (empty($this->_params['project_path'])) {
             return '请填写项目目录';
         }
-        if (empty($this->_params['repository'])) {
-            return '请选择代码仓库';
-        }
+
+        // 服务器
+
+
         // 替换文件
         if (!empty($this->_params['replace_files'])) {
             $upload_file_path = $this->request->app->config->get('app.upload_file_path');

@@ -12,7 +12,7 @@
             <div class="form-item">
               <label for="" class="form-label" required>服务器组</label>
               <div class="item-content">
-                <i-select v-model="server_group_index" filterable style="width:600px" v-on:on-change="handleServerGroupChange" >
+                <i-select v-model="server_group_index" filterable style="width:300px" v-on:on-change="handleServerGroupChange" >
                   <i-option v-for="(item,key) in serverGroups" :value="key" :key="key">{{ item.name }}</i-option>
                 </i-select>
                 <div style="margin: 10px 0;">
@@ -27,7 +27,7 @@
                 <Card :bordered="true">
                   <div slot="title">
                     <i-select v-model="project_group_index" v-on:on-change="handleProjectGroupChange" filterable
-                              style="width:500px">
+                              style="width:300px">
                       <i-option v-for="(item, key) in projectGroups" :value="key" :key="key">{{ item.name }}</i-option>
                     </i-select>
                   </div>

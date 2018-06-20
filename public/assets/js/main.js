@@ -75,26 +75,42 @@ new Vue({
   computed: {
     canSubmit: function () {
       var formItem = this.formItem
-      return formItem.server_ids.length > 0 && formItem.project_path && formItem.projects.length > 0
+      // 基础信息检查
+      if (!(formItem.server_ids.length > 0 && formItem.project_path && formItem.projects.length > 0)) {
+        return false;
+      }
+      // 检查是否选择了分支或标签
+      for (var i = 0; i < formItem.projects.length; i++) {
+        if (typeof formItem.projects[i].branch_tag === 'undefined') {
+          return false
+        }
+      }
+      return true;
     }
   },
   methods: {
+    // 服务器组改变事件
     handleServerGroupChange: function () {
       that.servers = that.serverGroups[that.server_group_index]['servers']
       that.formItem.server_ids = window.utils.getArrayColumn(that.servers, 'id')
     },
+    // 项目组改变事件
     handleProjectGroupChange: function () {
       that.formItem.projects = window.utils.cloneObject(that.projectGroups[that.project_group_index]['projects'])
     },
+    // 删除项目事件
     handleDeleteProjectButton: function (e, index) {
       that.formItem.projects.splice(index, 1)
     },
+    // 替换文件modal
     handleShowReplaceFileModal: function (e, project_index) {
       var project = that.formItem.projects[project_index]
-      that.replaceFileModal.visible = true
-      that.replaceFileModal.project_index = project_index
-      that.replaceFileModal.project_name = project.name
-      that.replaceFileModal.replace_files = typeof project.replace_files !== 'undefined' ? window.utils.cloneObject(project.replace_files) : []
+      that.replaceFileModal = {
+        visible: true,
+        project_index: project_index,
+        project_name: project.name,
+        replace_files: typeof project.replace_files !== 'undefined' ? window.utils.cloneObject(project.replace_files) : []
+      }
     },
     // 添加替换文件
     handleAddReplaceButton: function (e) {
@@ -219,25 +235,18 @@ new Vue({
         this.$Message.warning('请检查必填项');
         return;
       }
+      var formItem = that.formItem
+      var params = {
+        server_ids: that._formatSubmitServerIds(),
+        project_path: formItem.project_path,
+        remark: formItem.remark,
+        projects: that._formatSubmitProjects()
+      }
       that.loading = true
       that.loading_message = '提交中...'
-      var formItem = {}
-      Object.keys(that.formItem).forEach(function (key) {
-        formItem[key] = that.formItem[key]
-      })
-      var replace_files = []
-      formItem.replace_files.forEach(function (item) {
-        replace_files.push({
-          local_file: item.local_file,
-          replace_file: item.replace_file
-        })
-      })
-      // 当前只能上传一个
-      formItem.servers = [formItem.host]
-      formItem.replace_files = replace_files
       that.request.get({
         url: '/release',
-        params: formItem,
+        params: params,
         success: function (e, response) {
           that.loading = false
           if (response.status === 'error') {
@@ -248,6 +257,41 @@ new Vue({
         },
       })
     },
+    // 格式化要提交的服务器ID
+    _formatSubmitServerIds: function () {
+      var arr = []
+      var server_ids = that.formItem.server_ids
+      server_ids.forEach(function (item) {
+        if (item !== false) {
+          arr.push(item)
+        }
+      })
+      return arr
+    },
+    // 格式化要提交的项目信息
+    _formatSubmitProjects: function () {
+      var arr = []
+      var projects = that.formItem.projects
+      projects.forEach(function (item) {
+        var replace_files = typeof item.replace_files !== 'undefined' ? item.replace_files : []
+        var replace_files_arr = []
+        for (var i = 0; i < replace_files.length; i++) {
+          console.log(replace_files[i])
+          if (replace_files[i].local_file != '') {
+            replace_files_arr.push({
+              local_file: replace_files[i].local_file,
+              replace_file: replace_files[i].replace_file,
+            })
+          }
+        }
+        arr.push({
+          id: item.id,
+          branch_tag: item.branch_tag,
+          replace_files: replace_files_arr
+        })
+      })
+      return arr
+    },
     // 重置
     handleReset: function () {
       that.formItem = {
@@ -256,6 +300,8 @@ new Vue({
         project_path: '/acs/code/release',
         remark: '', // 发版说明
       }
+      that.server_group_index = -1
+      that.project_group_index = -1
     }
   },
   created: function () {
