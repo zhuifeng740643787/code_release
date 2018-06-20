@@ -4,119 +4,128 @@
 var that
 new Vue({
   el: '#main',
-  data: {
-    formItem: {
-      server_ids: [], // 要发布的服务器列表
-      project_id: 0,
-      branch: '',
-      project_path: '/acs/code/release',
-      replace_files: [
-        {
-          local_file: '',
-          replace_file: ''
-        },
-      ], // 替换文件
-      remark: '', // 发版说明
-    },
-    loading: false,// 加载中
-    loading_message: '加载中...',
-    fileContentModal: {
-      visible: false,
-      index: 0,
-      title: '文件详情',
-      content: '',
-    },
-    // 发布进度modal
-    progressModal: {
-      visible: false, // 控制modal显示
-      steps: [
-        '拉取分支代码',
-        '打包代码',
-        '上传至服务器',
-        '服务器端解压并部署代码包',
-        '保留历史版本'
-      ], // 发布的步骤
-      servers: {
-        'host1': {
-          rate: 1, // 当前进度
-          error: 'xx' // 是否有错，有错则停止
-        },
-        'host2': {
-          host: '123',
-          rate: 3, // 当前进度
-          error: 'xx' // 是否有错，有错则停止
-        },
-      }
-    },
-    selectServers: {}, // 服务器列表
-    selectProjects: [], // 项目列表
-    selectBranches: [], // 分支列表
-    allBranches: {}, // 所有仓库对应的分支
+  data: function () {
+    return {
+      formItem: {
+        server_ids: [], // 要发布的服务器列表
+        projects: [
+          // {
+          //   project_id: 0,
+          //   branch: '',
+          //   tag: '',
+          //   replace_files: [
+          //     {
+          //       local_file: '',
+          //       replace_file: '',
+          //     },
+          //   ],
+          // }
+        ],
+        project_path: '/acs/code/release',
+        remark: '', // 发版说明
+      },
+      server_group_index: -1, // 服务器组index
+      project_group_index: -1, // 项目组index
+      serverGroups: [], // 服务器组列表
+      projectGroups: [], // 项目组列表
+      servers: {}, //
+      loading: false,// 加载中
+      loading_message: '加载中...',
+      replaceFileModal: {
+        visible: false,
+        project_index: -1,
+        project_name: '',
+        replace_files: [
+          {
+            local_file: '',
+            replace_file: '',
+          },
+        ],
+      },
+      fileContentModal: {
+        visible: false,
+        index: 0,
+        title: '文件详情',
+        content: '',
+      },
+      // 发布进度modal
+      progressModal: {
+        visible: false, // 控制modal显示
+        steps: [
+          '拉取分支代码',
+          '打包代码',
+          '上传至服务器',
+          '服务器端解压并部署代码包',
+          '保留历史版本'
+        ], // 发布的步骤
+        servers: {
+          'host1': {
+            rate: 1, // 当前进度
+            error: 'xx' // 是否有错，有错则停止
+          },
+          'host2': {
+            host: '123',
+            rate: 3, // 当前进度
+            error: 'xx' // 是否有错，有错则停止
+          },
+        }
+      },
+    }
   },
   computed: {
-    canSubmit: function() {
+    canSubmit: function () {
       var formItem = this.formItem
-      return formItem.server_ids.length > 0 && formItem.project_id && formItem.branch && formItem.project_path
+      return formItem.server_ids.length > 0 && formItem.project_path && formItem.projects.length > 0
     }
   },
   methods: {
-    // 项目改变事件
-    handleProjectChange: function(value) {
-      that.formItem.project_id = value
-      that.showBranches()
+    handleServerGroupChange: function () {
+      that.servers = that.serverGroups[that.server_group_index]['servers']
+      that.formItem.server_ids = window.utils.getArrayColumn(that.servers, 'id')
     },
-    // 显示所有分支
-    showBranches: function() {
-      if (!that.formItem.project_id) {
-        return that.$Message.error('请先选择项目')
-      }
-
-      // 判断分支是否已加载过
-      if (that.allBranches[that.formItem.project_id] !== undefined) {
-        that.selectBranches = that.allBranches[that.formItem.project_id];
-        return;
-      }
-      that.loading = true
-      that.loading_message = '获取分支信息中...'
-      that.request.get({
-        url: '/git/branches',
-        params: {
-          project_id: that.formItem.project_id
-        },
-        success: function(e, response) {
-          that.loading = false
-          if (response.status === 'error') {
-            return that.$Message.error(response.message)
-          }
-
-          that.selectBranches = response.result.rows
-          that.allBranches[that.formItem.project_id] = response.result.rows
-        }
-      })
+    handleProjectGroupChange: function () {
+      that.formItem.projects = window.utils.cloneObject(that.projectGroups[that.project_group_index]['projects'])
+    },
+    handleDeleteProjectButton: function (e, index) {
+      that.formItem.projects.splice(index, 1)
+    },
+    handleShowReplaceFileModal: function (e, project_index) {
+      var project = that.formItem.projects[project_index]
+      that.replaceFileModal.visible = true
+      that.replaceFileModal.project_index = project_index
+      that.replaceFileModal.project_name = project.name
+      that.replaceFileModal.replace_files = typeof project.replace_files !== 'undefined' ? window.utils.cloneObject(project.replace_files) : []
     },
     // 添加替换文件
-    handleAddReplaceButton: function(e) {
-      that.formItem.replace_files.push({
+    handleAddReplaceButton: function (e) {
+      var item = {
         local_file: '',
         replace_file: '',
-      })
+      }
+      that.replaceFileModal.replace_files.push(item)
+      var project = that.formItem.projects[that.replaceFileModal.project_index]
+      if (typeof project.replace_files === 'undefined') {
+        project.replace_files = []
+      }
+      project.replace_files.push(item)
     },
     // 删除替换文件
-    handleDeleteReplaceButton: function(e, index) {
-      that.formItem.replace_files.splice(index, 1)
+    handleDeleteReplaceButton: function (e, index) {
+      that.replaceFileModal.replace_files.splice(index, 1)
+      that.formItem.projects[that.replaceFileModal.project_index].replace_files.splice(index, 1)
     },
     // 查看文件内容
-    handleViewFileContent: function(index) {
-      var file_name = that.formItem.replace_files[index].local_file
+    handleViewFileContent: function (index) {
+      var file_name = that.replaceFileModal.replace_files[index].local_file
       if (!file_name) {
         return;
       }
       that.request.get({
         url: '/other/file/view',
         params: {
-          file_name: file_name
+          file_name: file_name,
         },
-        success: function(e, response) {
+        success: function (e, response) {
           if (response.status === 'error') {
             return that.$Message.error(response.message)
           }
@@ -128,14 +137,14 @@ new Vue({
             content: response.result.content,
           }
         },
-        error: function(e, error) {
+        error: function (e, error) {
           console.error(error, '---')
         }
       })
     },
     // 修改文件
     handleChangeFileContent: function (index) {
-      var file_name = that.formItem.replace_files[index].local_file
+      var file_name = that.replaceFileModal.replace_files[index].local_file
       if (!file_name) {
         return;
       }
@@ -145,7 +154,7 @@ new Vue({
           file_name: file_name,
           content: that.fileContentModal.content
         },
-        success: function(e, response) {
+        success: function (e, response) {
           if (response.status === 'error') {
             return that.$Message.error(response.message)
           }
@@ -158,29 +167,30 @@ new Vue({
             content: '',
           }
         },
-        error: function(e, error) {
+        error: function (e, error) {
           console.error(error, '---')
         }
       })
     },
     // 触发上传事件
-    triggerUploadClick: function(event, index) {
+    triggerUploadClick: function (event, index) {
       document.querySelectorAll('.upload-wrapper input[type=file]')[index].click()
     },
     // 处理上传文件改变事件
-    handleUploadChange: function(event, index) {
+    handleUploadChange: function (event, index) {
       var files = event.target.files
       if (files.length == 0) {
         return false
       }
       this.upload(files[0], index)
     },
-    upload: function(file, index) {
+    upload: function (file, index) {
       var xhr = typeof XMLHttpRequest !== 'undefined' ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP')
       xhr.open('POST', '/other/upload', true)
       // 上传完成后的回调
       var formData = new FormData()
       formData.append('upload_file', file)
+      formData.append('file_dir', that.replaceFileModal.project_name)
       // 上传结束
       xhr.onload = function () {
         if (xhr.status === 200) {
@@ -188,7 +198,8 @@ new Vue({
           if (ret.status != 'success') {
             return that.$Message.error(ret.message)
           }
-          that.formItem.replace_files[index].local_file = ret.result.file_name
+          that.replaceFileModal.replace_files[index].local_file = ret.result.file_name
+          that.formItem.projects[that.replaceFileModal.project_index].replace_files[index].local_file = ret.result.file_name
         } else {
           that.$Message.error('上传失败')
         }
@@ -211,11 +222,11 @@ new Vue({
       that.loading = true
       that.loading_message = '提交中...'
       var formItem = {}
-      Object.keys(that.formItem).forEach(function(key) {
+      Object.keys(that.formItem).forEach(function (key) {
         formItem[key] = that.formItem[key]
       })
       var replace_files = []
-      formItem.replace_files.forEach(function(item) {
+      formItem.replace_files.forEach(function (item) {
         replace_files.push({
           local_file: item.local_file,
           replace_file: item.replace_file
@@ -227,7 +238,7 @@ new Vue({
       that.request.get({
         url: '/release',
         params: formItem,
-        success: function(e, response) {
+        success: function (e, response) {
           that.loading = false
           if (response.status === 'error') {
             return that.$Message.error(response.message)
@@ -240,37 +251,30 @@ new Vue({
     // 重置
     handleReset: function () {
       that.formItem = {
-        host: '',
-        project_name: '',
-        repository: '',
-        branch: '',
-        project_path: '/ac/code/release',
-        replace_files: [
-          {
-            local_file: '',
-            replace_file: ''
-          },
-        ]
+        server_ids: [], // 要发布的服务器列表
+        projects: [],
+        project_path: '/acs/code/release',
+        remark: '', // 发版说明
       }
     }
   },
-  created: function() {
+  created: function () {
     that = this
   },
-  mounted: function() {
+  mounted: function () {
     // 获取主机列表
     that.request = new Request();
     that.request.get({
       url: '/other/config',
-      success: function(e, response) {
+      success: function (e, response) {
         if (response.status === 'error') {
           return that.$Message.error(response.message)
         }
 
-        that.selectServers = response.result.servers
-        that.selectProjects = response.result.projects
+        that.serverGroups = response.result.server_groups
+        that.projectGroups = response.result.project_groups
       },
-      error: function(e, error) {
+      error: function (e, error) {
         console.error(error, '---')
       }
     })

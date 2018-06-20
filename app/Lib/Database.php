@@ -52,8 +52,9 @@ class Database
 
     public function select($sql, $params = []) {
         $ret = $this->exec($sql, $params);
-
-        return $ret->fetchAll();
+        $ret = $ret->fetchAll();
+        Log::debug([$ret, $sql, $params]);
+        return $ret;
     }
 
     public function first($sql, $params = []) {
@@ -80,5 +81,8 @@ class Database
         return $this->exec($sql, $params);
     }
 
+    public function quote($string, $parameter_type = \PDO::PARAM_STR) {
+        return $this->getConnect()->quote($string, $parameter_type);
+    }
 
 }

@@ -115,5 +115,49 @@ class Utils
     }
 
 
+    /**
+     * 获取数组中的某一列
+     * @param $data
+     * @param string $field
+     * @return array
+     */
+    public static function collectFields($data, $field = 'id') {
+        $ret = [];
+        foreach ($data as $row) {
+            if (is_object($row) && isset($row->{$field})) {
+                $ret[] = $row->{$field};
+                continue;
+            }
+            if (is_array($row) && isset($row[$field])) {
+                $ret[] = $row[$field];
+                continue;
+            }
+        }
+
+        return array_unique($ret);
+
+    }
+
+    /**
+     * 设置数组某列作为key
+     * @param $data
+     * @param string $field
+     * @return array
+     */
+    public static function collectSetFieldAsKey($data, $field = 'id') {
+        $ret = [];
+        foreach ($data as $row) {
+            if (is_object($row) && isset($row->{$field})) {
+                $ret[$row->{$field}] = $row;
+                continue;
+            }
+            if (is_array($row) && isset($row[$field])) {
+                $ret[$row[$field]] = $row;
+                continue;
+            }
+        }
+
+        return $ret;
+    }
 
 }

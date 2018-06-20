@@ -18,10 +18,6 @@ class IndexController extends Controller
     public function index(Request $request, Response $response)
     {
         $this->request = $request;
-        // 检查当前是否有正在发布的文件
-        if ($this->_isExistsReleasing()) {
-            return $response->jsonError('当前有正在发布的项目, 请稍后再试');
-        }
         // 生成版本号
         $this->version_num = date('YmdHis');
         // 初始化参数
@@ -41,13 +37,6 @@ class IndexController extends Controller
         ]);
     }
 
-    // 检查当前是否有正在发布的项目
-    private function _isExistsReleasing()
-    {
-        $deploy_default = $this->request->app->config->get('deploy_default');
-        $task_path = $deploy_default['local_tmp_task_path'];
-        return Task::isExistsTask($task_path);
-    }
 
     // 发布
     private function _handleRelease()

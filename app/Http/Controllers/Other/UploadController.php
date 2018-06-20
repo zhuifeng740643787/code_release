@@ -15,9 +15,10 @@ class UploadController extends Controller
         if (empty($file) || $file['error'] != 0) {
             return $response->jsonError('上传有误');
         }
-
-        $upload_file_path = $request->app->config->get('app.upload_file_path');
-        $file_path = date('Ymd');
+        $file_dir = rtrim($request->get('file_dir', ''), "\/");
+        $upload_file_path = rtrim($request->app->config->get('app.upload_file_path'), "\/");
+        $today = date('Ymd');
+        $file_path =  $today . (empty($file_dir) ? '' : DS . $file_dir);
         $save_dir =  $upload_file_path . DS . $file_path;
         if (!file_exists($save_dir)) {
             $ret = Utils::runExec("mkdir -p $save_dir");

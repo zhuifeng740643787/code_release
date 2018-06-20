@@ -9,9 +9,11 @@
 
 namespace App\Model;
 
+use App\Lib\Log;
+
 abstract class BaseModel
 {
-
+    protected $primary_key = 'id'; // 主键
     protected $table;
     protected $db;
     protected static $instances;
@@ -26,6 +28,18 @@ abstract class BaseModel
 
     public static function allEnables() {
         return static::getInstance()->select('*', 'status=:STATUS', [':STATUS' => static::ENABLE]);
+    }
+
+    public static function inIdsEnables($ids = [], $id_name = null)
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $in = str_repeat('?,', count($ids) - 1) . '?';
+        $enable = static::ENABLE;
+        $model = static::getInstance();
+        $id_name = empty($id_name) ? $model->primary_key : $id_name;
+        return $model->select('*', "status=$enable and $id_name in ($in)", $ids);
     }
 
     public static function findEnable($id) {
