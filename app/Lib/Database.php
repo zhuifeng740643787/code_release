@@ -44,6 +44,7 @@ class Database
             $ret->execute($params);
         } catch (\PDOException $exception) {
             Log::error($exception->getTraceAsString());
+            Log::error($exception->getMessage());
             return false;
         }
         return $ret;
@@ -53,7 +54,6 @@ class Database
     public function select($sql, $params = []) {
         $ret = $this->exec($sql, $params);
         $ret = $ret->fetchAll();
-        Log::debug([$ret, $sql, $params]);
         return $ret;
     }
 
@@ -70,7 +70,7 @@ class Database
         if (!$ret) {
             return false;
         }
-        return $this->conn->lastInsertId();
+        return intval($this->conn->lastInsertId());
     }
 
     public function update($sql, $params = []) {
@@ -82,7 +82,23 @@ class Database
     }
 
     public function quote($string, $parameter_type = \PDO::PARAM_STR) {
-        return $this->getConnect()->quote($string, $parameter_type);
+        return $this->conn->quote($string, $parameter_type);
     }
+
+    // 开启事务
+    public function beginTransaction() {
+        return $this->conn->beginTransaction();
+    }
+
+    // 提交事务
+    public function commit() {
+        return $this->conn->commit();
+    }
+
+    // 回滚事务
+    public function rollback() {
+        return $this->conn->rollBack();
+    }
+
 
 }

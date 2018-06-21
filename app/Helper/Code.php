@@ -8,6 +8,7 @@
 
 namespace App\Helper;
 
+use App\Lib\Log;
 use Kafka\Exception;
 
 class Code
@@ -114,12 +115,12 @@ class Code
             'identity_file_path' => $deploy_config['identity_file_path']
         ];
 
-        if (!self::writeConfigFile($deploy_path . DS . 'config.php', $config)) {
+        if (!Utils::writeConfigFile($deploy_path . DS . 'config.php', $config)) {
             Log::error('写入配置文件失败:' . $deploy_path);
             return false;
         }
 
-        $ret = self::runDep($deploy_path, 'valid_server', $name);
+        $ret = Utils::runDep($deploy_path, 'valid_server', $name, 3);
         if (false === $ret) {
             return false;
         }

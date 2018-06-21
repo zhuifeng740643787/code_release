@@ -4,9 +4,9 @@ return array (
   array (
     0 => 
     array (
-      'name' => '够范185',
-      'host' => '120.27.133.185',
-      'user' => 'root1',
+      'name' => '千色店91',
+      'host' => '114.55.113.91',
+      'user' => 'root',
     ),
   ),
   'identity_file_path' => '/Users/gongyidong/workspace/baison/code_release/config/ssh/id_rsa',
