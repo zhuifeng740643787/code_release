@@ -18,12 +18,12 @@ class ConfigController extends Controller
 {
     public function index(Request $request, Response $response)
     {
+
         return $response->jsonSuccess([
             'server_groups' => $this->_serverGroups(),
             'project_groups' => $this->_projectGroups()
         ]);
     }
-
 
     private function _serverGroups() {
         $groups = ServerGroup::allEnables();

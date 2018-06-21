@@ -10,6 +10,7 @@ namespace App\Console;
 use App\Console\Commands\InitProjects;
 use App\Console\Commands\InitProjectsCode;
 use App\Console\Commands\LaunchReleaseJob;
+use App\Console\Commands\ProcessTask;
 use App\Console\Commands\Test;
 use App\Console\Commands\UpAndDeployCode;
 use App\Helper\Utils;
@@ -19,7 +20,7 @@ class Kernel {
     protected $commands = [
         InitProjectsCode::class,
         LaunchReleaseJob::class,
-        UpAndDeployCode::class,
+        ProcessTask::class,
         Test::class
     ];
 
@@ -37,13 +38,13 @@ class Kernel {
     }
 
     public function help() {
-        Utils::log("===================================================", false);
+        Utils::log("=================================================================", false);
         Utils::log("帮助文档", false);
         foreach ($this->commands as $command) {
-            Utils::log("---------------------------------------------------", false);
-            Utils::log($command::$name . "\t" . $command::$description, false);
+            Utils::log("-----------------------------------------------------------------", false);
+            printf("%' -30s %s " . PHP_EOL, $command::$name, $command::$description);
         }
-        Utils::log("===================================================", false);
+        Utils::log("=================================================================", false);
     }
 
 }

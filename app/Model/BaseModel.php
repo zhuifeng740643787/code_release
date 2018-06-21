@@ -36,6 +36,7 @@ abstract class BaseModel
         if (empty($ids)) {
             return [];
         }
+        $ids = array_values($ids);
         $in = str_repeat('?,', count($ids) - 1) . '?';
         $enable = static::ENABLE;
         $model = static::getInstance();
@@ -48,63 +49,6 @@ abstract class BaseModel
         return static::getInstance()->first('*', 'id=:ID', [':ID' => $id]);
     }
 
-    public function select($select = '*', $where = '', $params = [])
-    {
-        $sql = "select $select from {$this->table}";
-        if ($where) {
-            $sql .= " where $where";
-        }
-        $rows = $this->db->select($sql, $params);
-        // 映射为当前类
-        return array_map(function($item) {
-            return cast(get_class($this), $item);
-        }, $rows);
-    }
-
-    public function first($select = '*', $where = '', $params = [])
-    {
-        $sql = "select $select from {$this->table}";
-        if ($where) {
-            $sql .= " where $where";
-        }
-        return cast(get_class($this), $this->db->first($sql, $params));
-    }
-
-    public function update($sets, $where = '', $params = [])
-    {
-        $set_str = '';
-        if (is_array($sets)) {
-            foreach ($sets as $k => $v) {
-                $set_str .= $k . '=' . is_string($v) ? "'$v'" : $v . ',';
-            }
-        } else {
-            $set_str = $sets;
-        }
-        $set_str = rtrim($set_str, ',');
-        if (empty($set_str)) {
-            return false;
-        }
-
-        $sql = "update {$this->table}";
-        if ($where) {
-            $sql .= " where $where";
-        }
-        return $this->db->update($sql, $params);
-    }
-
-    public function insert($params)
-    {
-        if (empty($params) || !is_array($params)) {
-            throw new \Exception('插入的参数有误');
-        }
-        $columns = array_keys($params);
-        $params = array_values($params);
-        $columns_space = implode(',', $columns);
-        $params_space = str_repeat('?,', count($params) - 1) . '?';
-        $sql = "insert into {$this->table}($columns_space) values ($params_space)";
-        return $this->db->insert($sql, $params);
-    }
-
     public static function getInstance()
     {
         if (!isset(static::$instances[static::class])) {
@@ -113,7 +57,6 @@ abstract class BaseModel
 
         return static::$instances[static::class];
     }
-
 
     public static function __callStatic($name, $arguments)
     {
@@ -178,4 +121,64 @@ abstract class BaseModel
 
         return $model;
     }
+
+
+    protected function select($select = '*', $where = '', $params = [])
+    {
+        $sql = "select $select from {$this->table}";
+        if ($where) {
+            $sql .= " where $where";
+        }
+        $rows = $this->db->select($sql, $params);
+        // 映射为当前类
+        return array_map(function($item) {
+            return cast(get_class($this), $item);
+        }, $rows);
+    }
+
+    protected function first($select = '*', $where = '', $params = [])
+    {
+        $sql = "select $select from {$this->table}";
+        if ($where) {
+            $sql .= " where $where";
+        }
+        return cast(get_class($this), $this->db->first($sql, $params));
+    }
+
+    protected function update($sets, $where = '', $params = [])
+    {
+        $set_str = '';
+        if (is_array($sets)) {
+            foreach ($sets as $k => $v) {
+                $set_str .= $k . '=' . is_string($v) ? "'$v'" : $v . ',';
+            }
+        } else {
+            $set_str = $sets;
+        }
+        $set_str = rtrim($set_str, ',');
+        if (empty($set_str)) {
+            return false;
+        }
+
+        $sql = "update {$this->table}";
+        if ($where) {
+            $sql .= " where $where";
+        }
+        return $this->db->update($sql, $params);
+    }
+
+    protected function insert($params)
+    {
+        if (empty($params) || !is_array($params)) {
+            throw new \Exception('插入的参数有误');
+        }
+        $columns = array_keys($params);
+        $params = array_values($params);
+        $columns_space = implode(',', $columns);
+        $params_space = str_repeat('?,', count($params) - 1) . '?';
+        $sql = "insert into {$this->table}($columns_space) values ($params_space)";
+        return $this->db->insert($sql, $params);
+    }
+
+
 }

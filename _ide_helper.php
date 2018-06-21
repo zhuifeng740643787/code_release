@@ -20,8 +20,7 @@ if (!function_exists('env')) {
 if (!function_exists('app')) {
 
     function app() {
-        global $app;
-        return $app;
+        return $GLOBALS['app'];
     }
 }
 

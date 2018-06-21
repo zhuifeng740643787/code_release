@@ -209,7 +209,51 @@ class Code
         return Utils::runExec("cd $code_path && $git checkout $branch && $git pull");
     }
 
-    /**
+    // 获取标签最新代码
+    public static function getTagCode($code_path, $tag)
+    {
+        $deploy_config = app()->config->get('deploy');
+        $git = $deploy_config['local_git_bin'];
+        if (!file_exists($code_path)) {
+            throw new \Exception('项目未找到:' . $code_path);
+        }
+
+        // 判断是否有代码, 没有则拉取master分支的代码
+        if (!file_exists($code_path . DS . '.git')) {
+            throw new \Exception('项目无代码:' . $code_path);
+        }
+
+        // 判断本地是否已含有所要拉取的标签
+        $tags = trim(Utils::runExec("cd $code_path && $git tag --column"));
+        $tag_arr = explode(' ', $tags);
+        if (!in_array($tag, $tag_arr)) {
+            throw new \Exception("标签[$tag]不存在: ". $code_path);
+        }
+
+        // 判断本地是否已含有所要拉取的分支
+        $local_branches = trim(Utils::runExec("cd $code_path && $git branch --column"));
+        $local_branch_arr = explode(' ', $local_branches);
+
+        // 当前分支名称
+        $current_branch = $local_branch_arr[array_search('*', $local_branch_arr) + 1];
+
+        // 是当前分支，拉取最新代码
+        if ($current_branch == $tag) {
+            return Utils::runExec("cd $code_path && $git pull");
+        }
+
+        // clean当前分支的代码,以便切换分支
+        if (!self::isBranchClean($code_path, $git)) {
+            Utils::runExec("cd $code_path && $git add -A && $git stash");
+        }
+        // 判断是否存在于本地分支
+        if (!in_array($tag, $local_branch_arr)) {
+            return Utils::runExec("cd $code_path && $git checkout $tag -b $tag");
+        }
+        return Utils::runExec("cd $code_path && $git checkout $tag && $git pull");
+    }
+
+        /**
      * 检查分支是否干净
      * @param $code_path
      * @param $git
