@@ -20,9 +20,10 @@ foreach ($deploy_config as $key => $value) {
 }
 
 // 设置服务器
-foreach ($remote_servers as $server_name => $server) {
-    server($server_name, $server['host'])
+foreach ($remote_servers as $server) {
+    server($server['name'], $server['host'], $server['port'])
         ->user($server['user'])
+        ->password($server['password'])
         ->identityFile(get('identity_file_path'));
 }
 
@@ -30,10 +31,10 @@ foreach ($remote_servers as $server_name => $server) {
 // 1=成功
 task('unzip_and_deploy_code', function() {
     $remote_code_release_path = get('remote_code_release_path'); // 路径
-    $version_name = get('version_name'); // 版本名称
+    $version_num = get('version_num'); // 版本名称
     // 进入目录
     cd($remote_code_release_path);
-    $zip_file = $version_name. '.zip';
+    $zip_file = $version_num. '.zip';
     $zip_file_path = $remote_code_release_path . '/' . $zip_file;
     // 判断zip文件是否存在
     if (!test("[[ -e $zip_file_path ]]")) {
@@ -42,14 +43,14 @@ task('unzip_and_deploy_code', function() {
     }
     $unzip_bin = get('remote_unzip_bin');
     // 先删掉存在的相同的代码目录 解压到以版本号命名的目录
-    run("rm -rf $version_name && $unzip_bin $zip_file_path -d $version_name");
+    run("rm -rf $version_num && $unzip_bin $zip_file_path -d $version_num");
     // 移动代码文件
     $projects = get('projects');
     $version_suffix = '_v' . date('YmdHis');
     foreach ($projects as $project) {
         $project_name = $project['name'];
         $origin_project_path = $remote_code_release_path . '/' . $project_name;
-        $new_project_path = $remote_code_release_path . '/' . $version_name . '/' . $project_name;
+        $new_project_path = $remote_code_release_path . '/' . $version_num . '/' . $project_name;
         if (!test("[[ -e $new_project_path]]")) {
             continue;
         }
@@ -70,7 +71,7 @@ task('unzip_and_deploy_code', function() {
     }
 
     // 删除压缩包
-    run("rm -rf $version_name && rm -f $zip_file_path && echo 1");
+    run("rm -rf $version_num && rm -f $zip_file_path && echo 1");
     echo TASK_SUCCESS;
     exit;
 });

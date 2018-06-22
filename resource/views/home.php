@@ -94,7 +94,7 @@
             <div class="form-item">
               <label for="" class="form-label" required>项目存放路径</label>
               <div class="item-content">
-                <i-input v-model="formItem.project_path" placeholder="项目存放路径" style="width: 300px"></i-input>
+                <i-input v-model="formItem.release_code_path" placeholder="项目发布路径" style="width: 300px"></i-input>
                 <Alert style="display: inline-block;">项目路径，如路径为/acs/code/release,项目为mc3时，项目存放位置为/acs/code/release/mc3
                 </Alert>
               </div>

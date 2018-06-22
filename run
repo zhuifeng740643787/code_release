@@ -7,6 +7,7 @@ error_reporting(E_ERROR);
 define('DS', DIRECTORY_SEPARATOR);
 define("PROJECT_ROOT", __DIR__);
 define("CONFIG_ROOT", PROJECT_ROOT .DS . 'config');
+define('DEPLOY_ROOT', PROJECT_ROOT . DS . 'deploy');
 define('STORAGE_ROOT', PROJECT_ROOT . DS . 'storage');
 define('TMP_ROOT', STORAGE_ROOT . DS . 'tmp');
 

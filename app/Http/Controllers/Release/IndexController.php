@@ -37,7 +37,7 @@ class IndexController extends Controller
 
     public function index(Request $request, Response $response)
     {
-        // http://release.mc3local.com/release?server_ids=[1,3]&project_path=/acs/code/release1&remark=asda%E5%A4%A7%E8%90%A8%E8%BE%BE&projects=[{%22id%22:1,%22branch_tag%22:%22branch-develop%22,%22replace_files%22:[{%22local_file%22:%2220180620/mc3/aa.txt%22,%22replace_file%22:%22test%22},{%22local_file%22:%2220180620/mc3/bb.txt%22,%22replace_file%22:%22asd%22}]},{%22id%22:2,%22branch_tag%22:%22branch-Branch_Develop_mc3%22,%22replace_files%22:[{%22local_file%22:%2220180620/mid_src/aa.txt%22,%22replace_file%22:%22aa%22}]}]
+        // http://release.mc3local.com/release?server_ids=[1,3]&release_code_path=/acs/code/release1&remark=asda%E5%A4%A7%E8%90%A8%E8%BE%BE&projects=[{%22id%22:1,%22branch_tag%22:%22branch-develop%22,%22replace_files%22:[{%22local_file%22:%2220180620/mc3/aa.txt%22,%22replace_file%22:%22test%22},{%22local_file%22:%2220180620/mc3/bb.txt%22,%22replace_file%22:%22asd%22}]},{%22id%22:2,%22branch_tag%22:%22branch-Branch_Develop_mc3%22,%22replace_files%22:[{%22local_file%22:%2220180620/mid_src/aa.txt%22,%22replace_file%22:%22aa%22}]}]
         $this->request = $request;
         $this->response = $response;
         // 生成版本号
@@ -68,9 +68,10 @@ class IndexController extends Controller
             // 写入任务组
             $task_group = TaskGroup::add([
                 'version_num' => $this->version_num,
+                'status' => TaskGroup::STATUS_CREATED,
+                'release_code_path' => $this->_params['release_code_path'],
                 'params' => json_encode($this->_params),
                 'remark' => $this->_params['remark'],
-                'status' => TaskGroup::STATUS_CREATED,
             ]);
             $group_id = $task_group->id;
             // 创建任务服务器
@@ -150,22 +151,20 @@ class IndexController extends Controller
         }
     }
 
-
-
     // 接收参数
     protected function initParams()
     {
         $this->_params['server_ids'] = json_decode(trim($this->request->get('server_ids', '')), true);
         $this->_params['projects'] = json_decode(trim($this->request->get('projects', '')), true);
-        $this->_params['project_path'] = trim($this->request->get('project_path', ''));
+        $this->_params['release_code_path'] = trim($this->request->get('release_code_path', ''));
         $this->_params['remark'] = trim($this->request->get('remark', ''));
     }
 
     // 检查参数
     protected function checkParams()
     {
-        if (empty($this->_params['project_path'])) {
-            return '请填写项目目录';
+        if (empty($this->_params['release_code_path'])) {
+            return '请填写项目发布目录';
         }
         // 检查服务器
         if (true !== $check_servers = $this->_checkServers()) {
@@ -193,6 +192,9 @@ class IndexController extends Controller
             if (!Code::isServerVaild($server->name, $server->host, $server->user)) {
                 return "服务器{$server->name}不可用，请检查";
             }
+
+            // todo 检查是否有写入版本目录的权限
+
         }
         return true;
     }

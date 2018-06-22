@@ -21,7 +21,7 @@ new Vue({
           //   ],
           // }
         ],
-        project_path: '/acs/code/release',
+        release_code_path: '/acs/code/release',
         remark: '', // 发版说明
       },
       server_group_index: -1, // 服务器组index
@@ -76,7 +76,7 @@ new Vue({
     canSubmit: function () {
       var formItem = this.formItem
       // 基础信息检查
-      if (!(formItem.server_ids.length > 0 && formItem.project_path && formItem.projects.length > 0)) {
+      if (!(formItem.server_ids.length > 0 && formItem.release_code_path && formItem.projects.length > 0)) {
         return false;
       }
       // 检查是否选择了分支或标签
@@ -238,7 +238,7 @@ new Vue({
       var formItem = that.formItem
       var params = {
         server_ids: that._formatSubmitServerIds(),
-        project_path: formItem.project_path,
+        release_code_path: formItem.release_code_path,
         remark: formItem.remark,
         projects: that._formatSubmitProjects()
       }
@@ -297,7 +297,7 @@ new Vue({
       that.formItem = {
         server_ids: [], // 要发布的服务器列表
         projects: [],
-        project_path: '/acs/code/release',
+        release_code_path: '/acs/code/release',
         remark: '', // 发版说明
       }
       that.server_group_index = -1

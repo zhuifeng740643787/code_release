@@ -16,6 +16,7 @@ use App\Model\Task;
 use App\Model\TaskGroup;
 use App\Model\TaskProject;
 use App\Model\TaskProjectReplaceFile;
+use App\Model\TaskServer;
 
 class ProcessTask extends Command
 {
@@ -29,13 +30,17 @@ class ProcessTask extends Command
      * @var TaskGroup
      */
     protected $task_group; // 组任务
-    /**
-     * @var TaskProject
-     */
     protected $task_projects; // 子项目
+    protected $task_servers;  // 服务器
+    protected $deploy_path;   // deploy配置相关文件目录
 
     public function run()
     {
+        $this->task_group = TaskGroup::findEnable(13);
+        $this->task_name = $this->task_group->version_num;
+        $this->task_path = TMP_ROOT . DS . 'task' . DS . $this->task_name;
+        $this->_handleSubTasks();
+        exit;
         Utils::log('process_task start');
         // 获取未开始的任务组
         $this->task_group = $this->_getUnStartTaskGroup();
@@ -47,13 +52,13 @@ class ProcessTask extends Command
         Utils::log("处理任务组：ID={$this->task_group->id} 开始");
         // 将组任务状态置为开始，防止其他进程执行该组任务
         $this->task_group->changeStatus(TaskGroup::STATUS_STARTED);
+        $this->task_name = $this->task_group->version_num;
+        $this->task_path = TMP_ROOT . DS . 'task' . DS . $this->task_name;
         try {
             // 执行组任务：
             $this->_handleGroupTask();
             // 执行子任务：
-            // - 上传至服务器
-            // - 解压并部署
-            // - 保留历史版本
+            $this->_handleSubTasks();
         } catch (\Exception $exception) {
             // 任务报错
             Log::error($exception->getTraceAsString());
@@ -74,9 +79,7 @@ class ProcessTask extends Command
     // 执行组任务
     private function _handleGroupTask()
     {
-        $this->task_name = $this->task_group->version_num;
         Utils::log("创建任务目录");
-        $this->task_path = TMP_ROOT . DS . 'task' . DS . $this->task_name;
         // 创建任务目录
         Utils::runExec("mkdir -p {$this->task_path}");
 
@@ -199,7 +202,136 @@ class ProcessTask extends Command
         }
     }
 
-    // 修改任务状态
+    // 执行子任务
+    private function _handleSubTasks()
+    {
+        Utils::log("处理子任务 开始");
+        $this->task_servers = TaskServer::select('*', 'group_id=:GROUP_ID', [':GROUP_ID' => $this->task_group->id]);
+        $this->task_servers = Utils::collectSetFieldAsKey($this->task_servers, 'id');
 
+        Utils::log("写入deploy配置文件开始");
+        // 写入dep配置文件
+        $this->_createDeployConfig();
+        Utils::log("写入deploy配置文件结束");
+
+        // 子任务列表
+        $tasks = Task::select('*', 'task_group_id=:TASK_GROUP_ID and status=:STATUS',
+            [':TASK_GROUP_ID' => $this->task_group->id, ':STATUS' => Task::STATUS_CREATED]);
+
+        foreach ($tasks as $task) {
+            # todo 调试
+            if ($task->task_server_id != 21) {
+                continue;
+            }
+            // - 上传至服务器
+            $task_server = $this->task_servers[$task->task_server_id];
+            $this->_upZipCodeToServer($task, $task_server);
+
+            // - 解压并部署
+            $this->_unzipAndDeployOnServer($task, $task_server);
+            // - 保留历史版本
+//            $this->_remainHistoryCodeOnServer($task, $task_server);
+        }
+
+        Utils::log("处理子任务 结束");
+    }
+
+    // 解压并部署
+    private function _unzipAndDeployOnServer($task, $task_server) {
+        Utils::log("解压并部署，服务器[$task_server->name]($task_server->host) 开始");
+        $exec_result = Utils::runDep($this->deploy_path, 'unzip_and_deploy_code', $task_server->name);
+        // 失败
+        if (false === $exec_result) {
+            $task->changeStatus(Task::STATUS_ERROR);
+            throw new \Exception("服务器[$task_server->name]($task_server->host) 部署失败");
+        }
+        $task->changeStatus(Task::STATUS_DEPLOYED);
+        Utils::log("解压并部署，服务器[$task_server->name]($task_server->host) 完成");
+    }
+
+    // 保留历史版本
+    private function _remainHistoryCodeOnServer($task, $task_server) {
+        Utils::log("保留历史版本，服务器[$task_server->name]($task_server->host) 开始");
+        $exec_result = Utils::runDep($this->deploy_path, 'remain_history_version', $task_server->name);
+        // 失败
+        if (false === $exec_result) {
+            $task->changeStatus(Task::STATUS_ERROR);
+            throw new \Exception("服务器[$task_server->name]($task_server->host) 保留历史版本失败");
+        }
+        $task->changeStatus(Task::STATUS_DEPLOYED);
+        Utils::log("保留历史版本，服务器[$task_server->name]($task_server->host) 完成");
+    }
+    // 生成deploy配置相关文件，用于后续deploy操作
+    private function _createDeployConfig()
+    {
+        $this->deploy_path = $this->task_path . DS . 'deploy';
+        // 参照文件
+        $origin_deploy_path = DEPLOY_ROOT . DS . 'release';
+
+        // 创建目录并复制文件
+        $exec_result = Utils::runExec("mkdir -p $this->deploy_path && cp -R {$origin_deploy_path}\/* {$this->deploy_path}");
+        if (false === $exec_result) {
+            throw new \Exception("生成deploy配置出错");
+        }
+
+        $deploy_config = app()->config->get('deploy');
+        $config_arr = [
+            'version_num' => $this->task_group->version_num,
+            'remote_unzip_bin' => $deploy_config['remote_unzip_bin'],
+            'remote_servers' => $this->_formatRemoteServersForDeployConfig($this->task_servers),
+            'remote_code_release_path' => $this->task_group->release_code_path,
+            'identity_file_path' => $deploy_config['identity_file_path'],
+            'remain_history_version_num' => $deploy_config['remain_history_version_num'],
+            'projects' => $this->_formatProjectsForDeployConfig($this->task_projects)
+        ];
+        // 写入配置
+        Utils::writeConfigFile($this->deploy_path . DS . 'config.php', $config_arr);
+    }
+
+    // 格式化服务器列表，供deploy config使用
+    private function _formatRemoteServersForDeployConfig($remote_servers)
+    {
+        $server_arr = [];
+        foreach ($remote_servers as $server) {
+            $server_arr[] = [
+                'name' => $server->name,
+                'host' => $server->host,
+                'user' => $server->user,
+                'port' => $server->port,
+                'password' => $server->password,
+            ];
+        }
+        return $server_arr;
+    }
+
+    // 格式化项目列表，供deploy config使用
+    private function _formatProjectsForDeployConfig($projects){
+        $project_arr = [];
+        foreach ($projects as $project) {
+            $static_files = TaskProjectReplaceFile::getFiles($project->id, TaskProjectReplaceFile::TYPE_STATIC, false);
+            $project_arr = [
+                'name' => $project->name,
+                'static_files' => array_map(function($item) {
+                    return $item->local_file;
+                }, $static_files)
+            ];
+        }
+        return $project_arr;
+    }
+
+    // 上传至服务器
+    private function _upZipCodeToServer($task, $task_server)
+    {
+        $zip_file = $this->task_path . DS . 'zip' . DS . $this->task_name . '.zip';
+        Utils::log("上传至服务器[$task_server->name]($task_server->host) 开始");
+        $exec_result = Code::upZipCode($this->task_group->release_code_path, $zip_file, $task_server->host, $task_server->user, $task_server->port);
+        // 失败
+        if (false === $exec_result) {
+            $task->changeStatus(Task::STATUS_ERROR);
+            Utils::log("上传至服务器[$task_server->name]($task_server->host) 失败");
+        }
+        $task->changeStatus(Task::STATUS_UPLOADED);
+        Utils::log("上传至服务器[$task_server->name]($task_server->host) 完成");
+    }
 
 }

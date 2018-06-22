@@ -14,8 +14,9 @@ namespace App\Model;
  * @property string version_num
  * @property int status
  * @property int prev_status
- * @property string params
+ * @property string release_code_path
  * @property string remark
+ * @property string params
  */
 class TaskGroup extends BaseModel {
 

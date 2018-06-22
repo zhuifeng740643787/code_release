@@ -353,13 +353,14 @@ class Code
 
     /**
      * 上传代码
-     * @param $remote_code_release_path 服务端代码存放路径
-     * @param $zip_file 要上传的zip文件
-     * @param $server_host 服务器IP
-     * @param $server_user 用户名
+     * @param string $remote_code_release_path 服务端代码存放路径
+     * @param string $zip_file 要上传的zip文件
+     * @param string $server_host 服务器IP
+     * @param string $server_user 用户名
+     * @param int $server_port 端口号 默认22
      * @return bool
      */
-    public static function upZipCode($remote_code_release_path, $zip_file, $server_host, $server_user)
+    public static function upZipCode($remote_code_release_path, $zip_file, $server_host, $server_user, $server_port = 22)
     {
         $deploy_config = app()->config->get('deploy');
 
@@ -368,11 +369,12 @@ class Code
         $remote_ssh = $server_user . '@' . $server_host;
 
         // 检查并创建代码目录
-        $ret = Utils::runExec("ssh $remote_ssh '[ -d $remote_code_release_path ] && echo 1 || mkdir -p $remote_code_release_path'");
+        $ret = Utils::runExec("ssh $remote_ssh -p $server_port '[ -d $remote_code_release_path ] && echo 1 || mkdir -p $remote_code_release_path'");
         if (false === $ret) {
             return false;
         }
+
         // 上传代码
-        return Utils::runExec("scp -i $identity_file_path $zip_file $remote_ssh:$remote_code_release_path");
+        return Utils::runExec("scp -P $server_port -i $identity_file_path $zip_file $remote_ssh:$remote_code_release_path");
     }
 }
