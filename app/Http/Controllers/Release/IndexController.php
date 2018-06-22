@@ -151,49 +151,6 @@ class IndexController extends Controller
     }
 
 
-    // 将代码复制到release目录
-    private function _cpCodeToRelease()
-    {
-        $deploy_config = $this->request->app->config->get('deploy');
-        $code_path = $deploy_config['local_tmp_code_path'];
-        $release_path = $deploy_config['local_tmp_release_path'];
-        $project = $code_path . DS . $this->_params['project_name'];
-        // 复制
-        exec("rsync -a $project $release_path");
-    }
-
-    // 替换上传的文件并写入发版说明信息
-    private function _replaceFiles()
-    {
-        $deploy_config = $this->request->app->config->get('deploy');
-        $release_path = $deploy_config['local_tmp_release_path'];
-        // 项目文件目录
-        $project_path = $release_path . DS . $this->_params['project_name'];
-        // 上传目录
-        $upload_file_path = $this->request->app->config->get('app.upload_file_path');
-        foreach ($this->_params['replace_files'] as $item) {
-            $file = $upload_file_path . DS . $item['local_file'];
-            $replace_file = $project_path . DS . $item['replace_file'];
-            if (!Utils::replaceFile($file, $replace_file)) {
-                return false;
-            }
-        }
-        // 写入发版说明
-        file_put_contents($project_path . DS . 'release.md', $this->_releaseRemarkFormat());
-        return true;
-    }
-
-    // 版本发布说明
-    private function _releaseRemarkFormat($project_name)
-    {
-        // 获取git的commit head
-        $commit_head = Code::getGitHeadCommit($project_name);
-        return '# version_' . $this->_params['branch'] . '_' . $this->version_num . PHP_EOL
-            . '- ' . $commit_head[0] . PHP_EOL
-            . '- ' . $this->_params['remark'] . PHP_EOL
-            . '- ' . 'params: ' . var_export($this->_params, true) . PHP_EOL;
-    }
-
 
     // 接收参数
     protected function initParams()

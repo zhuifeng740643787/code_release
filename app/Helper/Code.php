@@ -9,7 +9,7 @@
 namespace App\Helper;
 
 use App\Lib\Log;
-use Kafka\Exception;
+use App\Model\TaskProject;
 
 class Code
 {
@@ -133,15 +133,14 @@ class Code
 
     /**
      * 获取仓库提交的head信息
-     * @param $project_name 项目名称
+     * @param $code_path 项目路径
      * @return bool
      * @throws \Exception
      */
-    public static function getGitHeadCommit($project_name)
+    public static function getGitHeadCommit($code_path)
     {
         $deploy_config = app()->config->get('deploy');
         $git = $deploy_config['local_git_bin'];
-        $code_path = realpath($deploy_config['local_tmp_code_path']) . DS . $project_name;
         if (!file_exists($code_path)) {
             throw new \Exception('项目未找到:' . $code_path);
         }
@@ -166,6 +165,7 @@ class Code
         if (!file_exists($destination_code_path) && false === Utils::runExec("mkdir -p $destination_code_path")) {
             throw new \Exception("无法创建文件：$destination_code_path");
         }
+
         // 复制文件
         return Utils::runExec("cd $source_code_path && cp -R $code_path $destination_code_path");
     }
@@ -187,12 +187,16 @@ class Code
         // 需要拉取的分支
         $branch = str_replace('remotes/origin/', '', $branch);
         // 判断本地是否已含有所要拉取的分支
-        $local_branches = trim(Utils::runExec("cd $code_path && $git branch --column"));
-        $local_branch_arr = explode(' ', $local_branches);
+        $local_branch_arr = Utils::runExec("cd $code_path && $git branch");
 
         // 当前分支名称
-        $current_branch = $local_branch_arr[array_search('*', $local_branch_arr) + 1];
-
+        $current_branch = '';
+        foreach ($local_branch_arr as $item) {
+            $item = trim($item);
+            if (strpos($item, '*') === 0) {
+                $current_branch = trim(mb_substr($item, 1));
+            }
+        }
         // 是当前分支，拉取最新代码
         if ($current_branch == $branch) {
             return Utils::runExec("cd $code_path && $git pull");
@@ -204,10 +208,11 @@ class Code
         }
         // 判断是否存在于本地分支
         if (!in_array($branch, $local_branch_arr)) {
-            return Utils::runExec("cd $code_path && $git checkout remotes/origin/$branch -b $branch");
+            return Utils::runExec("cd $code_path && $git checkout remotes/origin/$branch -B $branch");
         }
         return Utils::runExec("cd $code_path && $git checkout $branch && $git pull");
     }
+
 
     // 获取标签最新代码
     public static function getTagCode($code_path, $tag)
@@ -224,18 +229,22 @@ class Code
         }
 
         // 判断本地是否已含有所要拉取的标签
-        $tags = trim(Utils::runExec("cd $code_path && $git tag --column"));
-        $tag_arr = explode(' ', $tags);
+        $tag_arr = Utils::runExec("cd $code_path && $git tag");
         if (!in_array($tag, $tag_arr)) {
             throw new \Exception("标签[$tag]不存在: ". $code_path);
         }
 
         // 判断本地是否已含有所要拉取的分支
-        $local_branches = trim(Utils::runExec("cd $code_path && $git branch --column"));
-        $local_branch_arr = explode(' ', $local_branches);
+        $local_branch_arr = Utils::runExec("cd $code_path && $git branch");
 
         // 当前分支名称
-        $current_branch = $local_branch_arr[array_search('*', $local_branch_arr) + 1];
+        $current_branch = '';
+        foreach ($local_branch_arr as $item) {
+            $item = trim($item);
+            if (strpos($item, '*') === 0) {
+                $current_branch = trim(mb_substr($item, 1));
+            }
+        }
 
         // 是当前分支，拉取最新代码
         if ($current_branch == $tag) {
@@ -248,22 +257,23 @@ class Code
         }
         // 判断是否存在于本地分支
         if (!in_array($tag, $local_branch_arr)) {
-            return Utils::runExec("cd $code_path && $git checkout $tag -b $tag");
+            return Utils::runExec("cd $code_path && $git checkout $tag -B $tag");
         }
         return Utils::runExec("cd $code_path && $git checkout $tag && $git pull");
     }
 
-        /**
+    /**
      * 检查分支是否干净
      * @param $code_path
      * @param $git
      * @return bool
+     * @throws \Exception
      */
     public static function isBranchClean($code_path, $git)
     {
         $ret = Utils::runExec("cd $code_path && $git status");
         if (false === $ret) {
-            throw new Exception("代码不存在git配置:$code_path");
+            throw new \Exception("代码不存在git配置:$code_path");
         }
         $return_str = implode(' ', $ret);
         if (strpos($return_str, 'working tree clean') === false) {
@@ -272,26 +282,72 @@ class Code
         return true;
     }
 
+
     /**
-     * 压缩代码
-     * @param $zip_path 压缩文件存放路径
-     * @param $code_path 要压缩的文件路径
-     * @param $zip_file_name 压缩成的zip名称 xxx.zip
+     * 替换上传的文件
+     * @param string $project_path 项目路径
+     * @param array $replace_files 要替换的文件
      * @return bool
      */
-    public static function zipCode($zip_path, $code_path, $zip_file_name)
+    public static function replaceLocalFiles($project_path, $replace_files)
+    {
+        // 上传目录
+        $upload_file_path = app()->config->get('app.upload_file_path');
+        foreach ($replace_files as $item) {
+            $local_file = $upload_file_path . DS . $item['local_file'];
+            $replace_file = $project_path . DS . $item['replace_file'];
+            if (!Utils::replaceFile($local_file, $replace_file)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 写入发布说明信息
+     * @param $project_path
+     * @param $version_num
+     * @param $release_name 发布branch/tag名称
+     * @param $release_type 发布类型 1=branch 2=tag
+     * @param string $remark
+     * @return bool|int
+     */
+    public static function writeReleaseReadme($project_path, $version_num, $release_name, $release_type, $remark = '') {
+        // 获取git的commit head
+        $commit_head = Code::getGitHeadCommit($project_path);
+        $branch_str = TaskProject::$release_type_map[$release_type] . '_' . $release_name;
+        $content = '# version_' .  $version_num . PHP_EOL
+                    . '- ' . $branch_str . PHP_EOL
+                    . '- ' . $commit_head[0] . PHP_EOL
+                    . '- ' . $remark . PHP_EOL;
+        // 写入发版说明
+        return file_put_contents($project_path . DS . 'release.md', $content);
+    }
+
+    /**
+     * 压缩代码
+     * @param $code_path 要压缩的文件路径
+     * @param $zip_path 压缩文件存放路径
+     * @param $zip_file_name 压缩成的zip名称 xxx.zip
+     * @return bool
+     * @throws \Exception
+     */
+    public static function zipCode($code_path, $zip_path, $zip_file_name)
     {
         if (!file_exists($zip_path) || !file_exists($code_path)) {
-            throw new Exception("文件不存在");
+            throw new \Exception("文件不存在");
         }
+
         $deploy_config = app()->config->get('deploy');
         $zip = $deploy_config['local_zip_bin'];
+        $zip_file = $zip_path . DS . $zip_file_name;
         // 判断文件是否已存在（被其他任务执行过）
-        if (!file_exists($zip_path . DS . $zip_file_name)) {
+        if (file_exists($zip_file)) {
             return true;
         }
         // 过滤git及log文件，压缩到zip目录
-        return Utils::runExec("cd $zip_path && $zip -r $zip_file_name $code_path --exclude \\*.log --exclude \*.git\*");
+        $cmd = "cd $code_path && $zip -r $zip_file ./* --exclude \\*.log --exclude \*.git\*";
+        return Utils::runExec($cmd);
     }
 
 

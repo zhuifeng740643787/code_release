@@ -9,8 +9,13 @@ namespace App\Model;
 
 /**
  * Class TaskGroup
- * @params remark
  * @package App\Model
+ * @property int id
+ * @property string version_num
+ * @property int status
+ * @property int prev_status
+ * @property string params
+ * @property string remark
  */
 class TaskGroup extends BaseModel {
 
@@ -24,5 +29,22 @@ class TaskGroup extends BaseModel {
     const STATUS_PACKED = 40; // 状态 40=打包完成
     const STATUS_SUB_PROCESSING = 50; // 状态 50=子任务进行中
     const STATUS_FINISHED = 60; // 状态 60=完成
+
+    /**
+     * 修改状态,并写入日志
+     * @param $status
+     * @return mixed
+     */
+    public function changeStatus($status) {
+        if ($this->status == $status) {
+            return $this;
+        }
+        $this->prev_status = $this->status;
+        $this->status = $status;
+        $this->save();
+        // 添加日志
+        TaskLog::addLog($this->id, $status);
+        return $this;
+    }
 
 }

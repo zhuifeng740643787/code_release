@@ -9,10 +9,15 @@
 
 namespace App\Model;
 
+use App\Lib\Database;
+
 abstract class BaseModel
 {
     protected $primary_key = 'id'; // 主键
     protected $table;
+    /**
+     * @var Database
+     */
     protected $db;
     protected static $instances;
     protected $attributes = []; // 参数
@@ -122,7 +127,13 @@ abstract class BaseModel
         return $model;
     }
 
-
+    /**
+     * 查询
+     * @param string $select
+     * @param string $where
+     * @param array $params
+     * @return array
+     */
     protected function select($select = '*', $where = '', $params = [])
     {
         $sql = "select $select from {$this->table}";
@@ -136,31 +147,54 @@ abstract class BaseModel
         }, $rows);
     }
 
+    /**
+     * @param string $select
+     * @param string $where
+     * @param array $params
+     * @return object self
+     */
     protected function first($select = '*', $where = '', $params = [])
     {
         $sql = "select $select from {$this->table}";
         if ($where) {
             $sql .= " where $where";
         }
-        return cast(get_class($this), $this->db->first($sql, $params));
+        $row = $this->db->first($sql, $params);
+        if ($row) {
+            $row = cast(get_class($this), $row);
+        }
+        return $row;
     }
 
+    /**
+     * 修改
+     * @param string|array $sets 要修改的参数
+     * @param string $where
+     * @param array $params
+     * @return bool
+     */
     protected function update($sets, $where = '', $params = [])
     {
         $set_str = '';
         if (is_array($sets)) {
             foreach ($sets as $k => $v) {
-                $set_str .= $k . '=' . is_string($v) ? "'$v'" : $v . ',';
+                if ($k === 'created_at' || $k === 'updated_at') {
+                    continue;
+                }
+                $place = ":SET_{$k}";
+                $set_str .= $k . "={$place},";
+                $params[$place] = $v;
             }
         } else {
             $set_str = $sets;
         }
+
         $set_str = rtrim($set_str, ',');
         if (empty($set_str)) {
             return false;
         }
 
-        $sql = "update {$this->table}";
+        $sql = "update {$this->table} set $set_str ";
         if ($where) {
             $sql .= " where $where";
         }
