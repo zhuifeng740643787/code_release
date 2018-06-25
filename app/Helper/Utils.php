@@ -14,21 +14,23 @@ class Utils
 {
 
     /**
-     * 打印日志
+     * 写入日志
      * @param $message 日志内容
      * @param bool $show_time 是否显示时间
      */
     public static function log($message, $show_time = true)
     {
+        $log_file = TMP_ROOT . DS . 'log' . DS . 'release_' . date('Ymd') . '.log';
+        $content = '';
         if ($show_time) {
-            print_r(date('Y-m-d H:i:s'));
-            print_r("\t");
+            $content .= date('Y-m-d H:i:s') . "\t";
         }
-        print_r($message);
-        print_r("\t");
-        echo PHP_EOL;
+        if (is_array($message) || is_object($message)) {
+            $message = var_export($message, true);
+        }
+        $content .= $message . PHP_EOL;
+        file_put_contents($log_file, $content, FILE_APPEND);
     }
-
 
     /**
      * 写入配置文件内容

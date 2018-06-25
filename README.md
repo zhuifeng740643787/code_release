@@ -25,3 +25,32 @@
     - 解压并部署
     - 保留历史版本
     
+## 命令
+- zip / unzip
+- find 
+- scp
+- dep
+- mkdir / mv / cp / rm
+
+## 初始化项目步骤
+- 拷贝本地环境配置文件,并修改响应配置选项
+    ```
+    cp .env.sample.php .env.php
+    ```
+- 初始化数据库表
+    - 创建库表
+        ```
+         mysql> source xxx/install/init.sql
+        ```
+    - 写入项目配置到project表 
+    - 写入服务器配置到server表
+- 初始化项目代码
+     ``` 
+     php run init_projects_code 
+     ```
+- 启动发布任务监听脚本
+    ```
+    php run launch_release_job
+    ```
+    
+

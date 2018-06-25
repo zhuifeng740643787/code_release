@@ -51,13 +51,13 @@ task('unzip_and_deploy_code', function() {
         $project_name = $project['name'];
         $origin_project_path = $remote_code_release_path . '/' . $project_name;
         $new_project_path = $remote_code_release_path . '/' . $version_num . '/' . $project_name;
-        if (!test("[[ -e $new_project_path]]")) {
+        if (!test("[[ -e $new_project_path ]]")) {
             continue;
         }
 
         $version_project_name = $origin_project_path . $version_suffix;
         // 判断是否有已存在的项目文件，有则将一些静态配置文件覆盖到当前项目
-        if (test("[[ -e $origin_project_path]]")) {
+        if (test("[[ -e $origin_project_path ]]")) {
             $static_files = $project['static_files'];
             foreach ($static_files as $static_file){
                 if (test("[[ -e $origin_project_path\/$static_file ]]")) {
@@ -84,8 +84,14 @@ task('remain_history_version', function() {
     $projects = get('projects');
     foreach ($projects as $project) {
         $project_name = $project['name'];
-        $find_dirs = run("find . -maxdepth 1 -name \"{$project_name}_v*\" |grep -v 'zip'");
+        $find_dirs = run("find . -maxdepth 1 -name '{$project_name}_v*'");
         $dir_arr = explode("\n",$find_dirs);
+        // 去除zip文件
+        foreach ($dir_arr as $key => $dir) {
+            if (strpos($dir, '.zip') > 0) {
+                unset($dir_arr[$key]);
+            }
+        }
         if (count($dir_arr) <= $remain_history_version_num) {
             echo TASK_SUCCESS;
             exit;

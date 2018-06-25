@@ -5,6 +5,7 @@
  * Date: 2018/5/22
  * Time: 下午4:28
  */
+
 namespace App\Console;
 
 use App\Console\Commands\InitProjects;
@@ -15,16 +16,17 @@ use App\Console\Commands\Test;
 use App\Console\Commands\UpAndDeployCode;
 use App\Helper\Utils;
 
-class Kernel {
+class Kernel
+{
 
     protected $commands = [
         InitProjectsCode::class,
         LaunchReleaseJob::class,
         ProcessTask::class,
-        Test::class
     ];
 
-    public function handle($app, $command_name, $params) {
+    public function handle($app, $command_name, $params)
+    {
         if (empty($command_name)) {
             return $this->help();
         }
@@ -37,14 +39,15 @@ class Kernel {
         return $this->help();
     }
 
-    public function help() {
-        Utils::log("=================================================================", false);
-        Utils::log("帮助文档", false);
+    public function help()
+    {
+        print_r("=================================================================" . PHP_EOL);
+        print_r("帮助文档" . PHP_EOL);
         foreach ($this->commands as $command) {
-            Utils::log("-----------------------------------------------------------------", false);
+            print_r("-----------------------------------------------------------------" . PHP_EOL);
             printf("%' -30s %s " . PHP_EOL, $command::$name, $command::$description);
         }
-        Utils::log("=================================================================", false);
+        print_r("=================================================================" . PHP_EOL);
     }
 
 }

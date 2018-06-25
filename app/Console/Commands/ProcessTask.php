@@ -36,11 +36,6 @@ class ProcessTask extends Command
 
     public function run()
     {
-        $this->task_group = TaskGroup::findEnable(13);
-        $this->task_name = $this->task_group->version_num;
-        $this->task_path = TMP_ROOT . DS . 'task' . DS . $this->task_name;
-        $this->_handleSubTasks();
-        exit;
         Utils::log('process_task start');
         // 获取未开始的任务组
         $this->task_group = $this->_getUnStartTaskGroup();
@@ -54,11 +49,16 @@ class ProcessTask extends Command
         $this->task_group->changeStatus(TaskGroup::STATUS_STARTED);
         $this->task_name = $this->task_group->version_num;
         $this->task_path = TMP_ROOT . DS . 'task' . DS . $this->task_name;
+        // 获取子项目
+        Utils::log("获取子项目");
+        $this->task_projects = TaskProject::select('*', 'group_id=:GROUP_ID and task_status=:TASK_STATUS', [':GROUP_ID' => $this->task_group->id, ':TASK_STATUS' => TaskProject::TASK_STATUS_CREATED]);
+
         try {
             // 执行组任务：
             $this->_handleGroupTask();
             // 执行子任务：
             $this->_handleSubTasks();
+            // 完成任务
         } catch (\Exception $exception) {
             // 任务报错
             Log::error($exception->getTraceAsString());
@@ -66,7 +66,10 @@ class ProcessTask extends Command
             $this->task_group->changeStatus(TaskGroup::STATUS_ERROR);
             Utils::log("处理任务组：ID={$this->task_group->id} 出错");
         }
+        $this->task_group->changeStatus(TaskGroup::STATUS_FINISHED);
         Utils::log("处理任务组：ID={$this->task_group->id} 结束");
+        // 删除任务目录
+        $this->_removeLocalTaskFiles();
         Utils::log('process_task end');
     }
 
@@ -84,13 +87,15 @@ class ProcessTask extends Command
         Utils::runExec("mkdir -p {$this->task_path}");
 
         // - 各个子项目代码复制->切换分支/标签->替换文件->写入日志
-        // 获取子项目
-        Utils::log("获取子项目");
-        $this->task_projects = TaskProject::select('*', 'group_id=:GROUP_ID and task_status=:TASK_STATUS', [':GROUP_ID' => $this->task_group->id, ':TASK_STATUS' => TaskProject::TASK_STATUS_CREATED]);
         // 任务项目的存放路径
         $task_code_path = $this->task_path . DS . 'code';
         Utils::runExec("mkdir -p $task_code_path");
         Utils::log("开始处理子项目");
+        if (empty($this->task_projects)) {
+            Utils::log("无任务项目");
+            $this->task_group->changeStatus(TaskGroup::STATUS_ERROR);
+            return;
+        }
         foreach ($this->task_projects as $project) {
             // 项目代码复制->切换分支/标签->替换文件->写入release日志
             Utils::log("处理项目[{$project->name}]开始");
@@ -114,7 +119,6 @@ class ProcessTask extends Command
         // - 项目代码打包
         $zip_path = $this->task_path . DS . 'zip';
         $this->_zipCodes($task_code_path, $zip_path);
-
     }
 
 
@@ -217,12 +221,10 @@ class ProcessTask extends Command
         // 子任务列表
         $tasks = Task::select('*', 'task_group_id=:TASK_GROUP_ID and status=:STATUS',
             [':TASK_GROUP_ID' => $this->task_group->id, ':STATUS' => Task::STATUS_CREATED]);
-
+        if (empty($tasks)) {
+            Utils::log("无子任务");
+        }
         foreach ($tasks as $task) {
-            # todo 调试
-            if ($task->task_server_id != 21) {
-                continue;
-            }
             // - 上传至服务器
             $task_server = $this->task_servers[$task->task_server_id];
             $this->_upZipCodeToServer($task, $task_server);
@@ -230,7 +232,7 @@ class ProcessTask extends Command
             // - 解压并部署
             $this->_unzipAndDeployOnServer($task, $task_server);
             // - 保留历史版本
-//            $this->_remainHistoryCodeOnServer($task, $task_server);
+            $this->_remainHistoryCodeOnServer($task, $task_server);
         }
 
         Utils::log("处理子任务 结束");
@@ -258,7 +260,7 @@ class ProcessTask extends Command
             $task->changeStatus(Task::STATUS_ERROR);
             throw new \Exception("服务器[$task_server->name]($task_server->host) 保留历史版本失败");
         }
-        $task->changeStatus(Task::STATUS_DEPLOYED);
+        $task->changeStatus(Task::STATUS_FINISHED);
         Utils::log("保留历史版本，服务器[$task_server->name]($task_server->host) 完成");
     }
     // 生成deploy配置相关文件，用于后续deploy操作
@@ -309,7 +311,7 @@ class ProcessTask extends Command
         $project_arr = [];
         foreach ($projects as $project) {
             $static_files = TaskProjectReplaceFile::getFiles($project->id, TaskProjectReplaceFile::TYPE_STATIC, false);
-            $project_arr = [
+            $project_arr[] = [
                 'name' => $project->name,
                 'static_files' => array_map(function($item) {
                     return $item->local_file;
@@ -332,6 +334,20 @@ class ProcessTask extends Command
         }
         $task->changeStatus(Task::STATUS_UPLOADED);
         Utils::log("上传至服务器[$task_server->name]($task_server->host) 完成");
+    }
+
+
+    // 删除当前任务目录
+    private function _removeLocalTaskFiles()
+    {
+        Utils::log("删除任务目录 开始");
+        $local_task_file = $this->task_path . DS . $this->task_name;
+        $exec_result = Utils::runExec("rm -rf $local_task_file");
+        if (false === $exec_result) {
+            Utils::log("删除任务目录失败");
+            return;
+        }
+        Utils::log("删除任务目录 完成");
     }
 
 }

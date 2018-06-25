@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.6.22-log)
 # Database: code_release
-# Generation Time: 2018-06-21 08:08:39 +0000
+# Generation Time: 2018-06-25 05:38:33 +0000
 # ************************************************************
 
 
@@ -37,17 +37,6 @@ CREATE TABLE `project` (
   UNIQUE KEY `project_repository_uniq` (`repository`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='项目表';
 
-LOCK TABLES `project` WRITE;
-/*!40000 ALTER TABLE `project` DISABLE KEYS */;
-
-INSERT INTO `project` (`id`, `name`, `repository`, `status`, `created_at`, `updated_at`)
-VALUES
-	(1,'mc3','git@192.168.175.129:MC3/mc3.git',1,'2018-06-13 09:15:36','2018-06-13 09:15:36'),
-	(2,'mid_src','git@192.168.175.129:POS/MID_SRC.git',1,'2018-06-13 09:18:19','2018-06-13 09:28:27'),
-	(3,'mpos_online_src','git@192.168.175.129:POS/MPOS_ONLNE/MPOS_ONLINE_SRC.git',1,'2018-06-13 09:22:00','2018-06-13 09:28:20');
-
-/*!40000 ALTER TABLE `project` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table project_group
@@ -64,16 +53,6 @@ CREATE TABLE `project_group` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='项目组';
 
-LOCK TABLES `project_group` WRITE;
-/*!40000 ALTER TABLE `project_group` DISABLE KEYS */;
-
-INSERT INTO `project_group` (`id`, `name`, `status`, `created_at`, `updated_at`)
-VALUES
-	(1,'mc3',1,'2018-06-18 17:11:33','2018-06-18 17:11:33'),
-	(2,'test',1,'2018-06-18 17:11:56','2018-06-18 17:11:56');
-
-/*!40000 ALTER TABLE `project_group` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table project_group_combination
@@ -88,21 +67,13 @@ CREATE TABLE `project_group_combination` (
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态1=有效 0=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `project_group_combination_uniq` (`group_id`,`project_id`),
+  KEY `project_group_combination_project_fk` (`project_id`),
+  CONSTRAINT `project_group_combination_group_fk` FOREIGN KEY (`group_id`) REFERENCES `project_group` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `project_group_combination_project_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='项目和项目组组合';
 
-LOCK TABLES `project_group_combination` WRITE;
-/*!40000 ALTER TABLE `project_group_combination` DISABLE KEYS */;
-
-INSERT INTO `project_group_combination` (`id`, `group_id`, `project_id`, `status`, `created_at`, `updated_at`)
-VALUES
-	(1,1,1,1,'2018-06-19 08:58:37','2018-06-19 08:58:37'),
-	(2,1,2,1,'2018-06-19 08:58:48','2018-06-19 08:58:48'),
-	(3,1,3,1,'2018-06-19 08:58:54','2018-06-19 08:58:54'),
-	(4,2,2,1,'2018-06-19 08:59:01','2018-06-19 08:59:01');
-
-/*!40000 ALTER TABLE `project_group_combination` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table project_static_file
@@ -122,19 +93,6 @@ CREATE TABLE `project_static_file` (
   CONSTRAINT `project_static_files_project_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='项目的静态文件(用于从旧版本项目中复制)';
 
-LOCK TABLES `project_static_file` WRITE;
-/*!40000 ALTER TABLE `project_static_file` DISABLE KEYS */;
-
-INSERT INTO `project_static_file` (`id`, `project_id`, `file_path`, `status`, `created_at`, `updated_at`)
-VALUES
-	(1,1,'config/database.php',1,'2018-06-13 09:30:34','2018-06-13 09:30:53'),
-	(2,2,'saas.php',1,'2018-06-13 09:31:07','2018-06-13 09:31:07'),
-	(3,2,'saas_config.php',1,'2018-06-13 09:31:15','2018-06-13 09:31:15'),
-	(4,2,'config.php',1,'2018-06-13 09:31:22','2018-06-13 09:31:22'),
-	(5,3,'script/saas.js',1,'2018-06-13 09:31:31','2018-06-13 09:31:31');
-
-/*!40000 ALTER TABLE `project_static_file` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table server
@@ -157,17 +115,6 @@ CREATE TABLE `server` (
   UNIQUE KEY `host` (`host`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='服务器列表';
 
-LOCK TABLES `server` WRITE;
-/*!40000 ALTER TABLE `server` DISABLE KEYS */;
-
-INSERT INTO `server` (`id`, `name`, `host`, `user`, `password`, `port`, `status`, `created_at`, `updated_at`)
-VALUES
-	(1,'够范185','120.27.133.185','root','',0,1,'2018-06-13 08:52:42','2018-06-21 09:50:06'),
-	(2,'共享214','120.27.144.214','root','',0,1,'2018-06-13 08:54:35','2018-06-13 08:54:35'),
-	(3,'千色店91','114.55.113.91','root','',0,1,'2018-06-13 08:54:35','2018-06-13 08:54:35');
-
-/*!40000 ALTER TABLE `server` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table server_group
@@ -184,16 +131,6 @@ CREATE TABLE `server_group` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='服务器组';
 
-LOCK TABLES `server_group` WRITE;
-/*!40000 ALTER TABLE `server_group` DISABLE KEYS */;
-
-INSERT INTO `server_group` (`id`, `name`, `status`, `created_at`, `updated_at`)
-VALUES
-	(1,'mc3',1,'2018-06-18 17:12:10','2018-06-18 17:12:24'),
-	(2,'test',1,'2018-06-18 17:12:21','2018-06-18 17:12:21');
-
-/*!40000 ALTER TABLE `server_group` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table server_group_combination
@@ -208,21 +145,13 @@ CREATE TABLE `server_group_combination` (
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态1=有效 0=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `server_group_combination_uniq` (`group_id`,`server_id`),
+  KEY `server_group_combination_server_fk` (`server_id`),
+  CONSTRAINT `server_group_combination_group_fk` FOREIGN KEY (`group_id`) REFERENCES `server_group` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `server_group_combination_server_fk` FOREIGN KEY (`server_id`) REFERENCES `server` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='服务器和服务器组组合';
 
-LOCK TABLES `server_group_combination` WRITE;
-/*!40000 ALTER TABLE `server_group_combination` DISABLE KEYS */;
-
-INSERT INTO `server_group_combination` (`id`, `group_id`, `server_id`, `status`, `created_at`, `updated_at`)
-VALUES
-	(1,1,1,1,'2018-06-18 17:43:26','2018-06-18 17:43:26'),
-	(2,1,2,1,'2018-06-18 17:43:40','2018-06-18 17:43:40'),
-	(3,1,3,1,'2018-06-19 10:38:33','2018-06-19 10:38:33'),
-	(4,2,1,1,'2018-06-19 10:38:38','2018-06-19 10:38:38');
-
-/*!40000 ALTER TABLE `server_group_combination` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table task
@@ -234,8 +163,8 @@ CREATE TABLE `task` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `task_group_id` int(11) unsigned NOT NULL,
   `task_server_id` int(11) unsigned NOT NULL,
-  `status` tinyint(3) NOT NULL DEFAULT '1' COMMENT '状态:-10=任务报错 0=取消 10=任务创建 20=已上传至服务器 30=已解压并部署 40=完成（已保留版本）',
-  `prev_status` tinyint(3) NOT NULL DEFAULT '1' COMMENT '前一状态',
+  `status` tinyint(3) NOT NULL DEFAULT '10' COMMENT '状态:-10=任务报错 0=取消 10=任务创建 20=已上传至服务器 30=已解压并部署 40=完成（已保留版本）',
+  `prev_status` tinyint(3) NOT NULL DEFAULT '10' COMMENT '前一状态',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -256,8 +185,10 @@ CREATE TABLE `task_group` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `version_num` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '任务版本',
   `status` tinyint(3) NOT NULL DEFAULT '10' COMMENT '状态 -10=任务报错 0=已取消 10=任务创建 20=开始任务 30=代码复制完成 40=打包完成  50=子任务进行中 60=完成',
+  `prev_status` tinyint(3) NOT NULL DEFAULT '10' COMMENT '前一状态',
+  `release_code_path` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '代码发布目录',
+  `remark` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '备注',
   `params` text COLLATE utf8mb4_unicode_ci COMMENT '任务参数json之后的字符串',
-  `remark` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '备注',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -275,7 +206,7 @@ CREATE TABLE `task_log` (
   `task_group_id` int(11) unsigned NOT NULL,
   `task_id` int(11) unsigned DEFAULT NULL,
   `type` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '任务类型 1=组任务 2=子任务',
-  `status` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '状态',
+  `status` tinyint(3) NOT NULL DEFAULT '0' COMMENT '组任务状态 -10=任务报错 0=已取消 10=任务创建 20=开始任务 30=代码复制完成 40=打包完成  50=子任务进行中 60=完成;  子任务状态:-10=任务报错 0=取消 10=任务创建 20=已上传至服务器 30=已解压并部署 40=完成（已保留版本）',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -301,6 +232,7 @@ CREATE TABLE `task_project` (
   `release_type` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '发布类型 1=branch 2=tag',
   `release_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '发布类型名称 分支名/标签名',
   `task_status` tinyint(3) NOT NULL DEFAULT '0' COMMENT '项目状态 -10=报错 0=创建完成 10=代码复制 20=切换分支/标签 30=文件替换 40=写入release日志文件',
+  `prev_status` tinyint(3) NOT NULL DEFAULT '0' COMMENT '前一状态',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

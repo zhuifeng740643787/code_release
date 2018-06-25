@@ -20,7 +20,7 @@ class LaunchReleaseJob extends Command
     public function run()
     {
         Utils::log('launch_release_job start');
-        $this->launchCommand('up_and_deploy_code', 10);
+        $this->launchCommand('process_task', 10);
         Utils::log('launch_release_job end');
     }
 
@@ -34,9 +34,9 @@ class LaunchReleaseJob extends Command
             return true;
         }
         $log_file = STORAGE_ROOT . DS . 'app' . DS . 'log' . DS . 'crontab.log';
-        $cmd = PROJECT_ROOT . DS . "loop_command.sh $command $sleep_seconds >> $log_file 2>&1 &";
-        exec($cmd);
-        if (!$this->isProcessExists($command)) {
+        $cmd = PROJECT_ROOT . DS . "loop_command $command $sleep_seconds >> $log_file 2>&1 &";
+        $exec_result = Utils::runExec($cmd);
+        if (false === $exec_result) {
             Utils::log('launch_release_job job=' . $command . ' 启动失败');
             return false;
         }
