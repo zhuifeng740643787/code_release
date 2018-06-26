@@ -73,7 +73,7 @@ class ProgressController extends Controller
 
         foreach ($status_steps as $key => $status) {
             if ($ret['status'] === TaskGroup::STATUS_ERROR) {
-                if ($status == $ret['prev_status']) {
+                if ($status == $this->task_group->prev_status) {
                     $ret['currentStep'] = $key + 1;
                 }
             } else {
