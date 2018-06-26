@@ -36,6 +36,11 @@ abstract class BaseModel
         return static::getInstance()->select('*', 'status=:STATUS', [':STATUS' => static::ENABLE]);
     }
 
+    public static function all()
+    {
+        return static::getInstance()->select('*');
+    }
+
     public static function inIds($ids = [], $id_name = null)
     {
         if (empty($ids)) {

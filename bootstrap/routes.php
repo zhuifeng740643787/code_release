@@ -20,4 +20,9 @@ return [
     '/release' => \App\Http\Controllers\Release\IndexController::class,
     '/release/progress' => \App\Http\Controllers\Release\ProgressController::class,
 
+    '/servers' => \App\Http\Controllers\Server\ListController::class,
+
+    '/projects' => \App\Http\Controllers\Project\ListController::class,
+
+
 ];
