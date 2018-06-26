@@ -121,10 +121,10 @@ abstract class BaseModel
     // 编辑数据
     public function save()
     {
-        // 插入
         $params = $this->getAttributes();
-        // 插入
         if (empty($params[$this->primary_key])) {
+            // 插入
+            $params['created_at'] = date('Y-m-d H:i:s');
             $id = $this->insert($params);
             if (!$id) {
                 throw new \Exception('插入失败');
