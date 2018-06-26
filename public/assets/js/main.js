@@ -8,7 +8,7 @@ new Vue({
     return {
       // 菜单控制
       menu: {
-        active: 'config', // 显示的menu
+        active: 'release', // 显示的menu
         list: {
           release: {
             name: '代码发布',
