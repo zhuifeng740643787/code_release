@@ -63,7 +63,7 @@ class ProcessTask extends Command
             // 任务报错
             Log::error($exception->getTraceAsString());
             Log::error($exception->getMessage());
-            $this->task_group->changeStatus(TaskGroup::STATUS_ERROR);
+            $this->task_group->changeStatus(TaskGroup::STATUS_ERROR, mb_substr($exception->getMessage(), 0, 200));
             Utils::log("处理任务组：ID={$this->task_group->id} 出错");
         }
         $this->task_group->changeStatus(TaskGroup::STATUS_FINISHED);
@@ -93,7 +93,7 @@ class ProcessTask extends Command
         Utils::log("开始处理子项目");
         if (empty($this->task_projects)) {
             Utils::log("无任务项目");
-            $this->task_group->changeStatus(TaskGroup::STATUS_ERROR);
+            $this->task_group->changeStatus(TaskGroup::STATUS_ERROR, '无任务项目');
             return;
         }
         foreach ($this->task_projects as $project) {
@@ -130,7 +130,7 @@ class ProcessTask extends Command
         // 处理结果
         if (false === $exec_result) {
             // 失败
-            $project->changeStatus(TaskProject::TASK_STATUS_ERROR);
+            $project->changeStatus(TaskProject::TASK_STATUS_ERROR, '复制代码失败');
             throw new \Exception('复制代码失败');
         }
         $project->changeStatus(TaskProject::TASK_STATUS_COPIED);
@@ -150,7 +150,7 @@ class ProcessTask extends Command
 
         if (false === $exec_result) {
             // 失败
-            $project->changeStatus(TaskProject::TASK_STATUS_ERROR);
+            $project->changeStatus(TaskProject::TASK_STATUS_ERROR, '切换分支失败');
             throw new \Exception('切换分支失败');
         }
         $project->changeStatus(TaskProject::TASK_STATUS_SWITCHED);
@@ -166,7 +166,7 @@ class ProcessTask extends Command
         $exec_result = Code::replaceLocalFiles($project_code_path, $replace_files);
         // 执行失败
         if (false === $exec_result) {
-            $project->changeStatus(TaskProject::TASK_STATUS_ERROR);
+            $project->changeStatus(TaskProject::TASK_STATUS_ERROR, '替换本地文件失败');
             throw new \Exception('替换本地文件失败');
         }
         $project->changeStatus(TaskProject::TASK_STATUS_REPLACED);
@@ -197,7 +197,7 @@ class ProcessTask extends Command
         Utils::log("项目代码打包,打包目录：'{$zip_path}'");
         $exec_result = Code::zipCode($task_code_path, $zip_path, $this->task_name . '.zip');
         if (false === $exec_result) {
-            $this->task_group->changeStatus(TaskGroup::STATUS_ERROR);
+            $this->task_group->changeStatus(TaskGroup::STATUS_ERROR, '项目打包出错');
             Utils::log("项目代码打包出错");
             throw new \Exception('项目打包出错');
         } else {
@@ -244,7 +244,7 @@ class ProcessTask extends Command
         $exec_result = Utils::runDep($this->deploy_path, 'unzip_and_deploy_code', $task_server->name);
         // 失败
         if (false === $exec_result) {
-            $task->changeStatus(Task::STATUS_ERROR);
+            $task->changeStatus(Task::STATUS_ERROR, "部署失败");
             throw new \Exception("服务器[$task_server->name]($task_server->host) 部署失败");
         }
         $task->changeStatus(Task::STATUS_DEPLOYED);
@@ -257,7 +257,7 @@ class ProcessTask extends Command
         $exec_result = Utils::runDep($this->deploy_path, 'remain_history_version', $task_server->name);
         // 失败
         if (false === $exec_result) {
-            $task->changeStatus(Task::STATUS_ERROR);
+            $task->changeStatus(Task::STATUS_ERROR, "保留历史版本失败");
             throw new \Exception("服务器[$task_server->name]($task_server->host) 保留历史版本失败");
         }
         $task->changeStatus(Task::STATUS_FINISHED);
@@ -329,7 +329,7 @@ class ProcessTask extends Command
         $exec_result = Code::upZipCode($this->task_group->release_code_path, $zip_file, $task_server->host, $task_server->user, $task_server->port);
         // 失败
         if (false === $exec_result) {
-            $task->changeStatus(Task::STATUS_ERROR);
+            $task->changeStatus(Task::STATUS_ERROR, "上传文件至服务器失败");
             Utils::log("上传至服务器[$task_server->name]($task_server->host) 失败");
         }
         $task->changeStatus(Task::STATUS_UPLOADED);
@@ -341,7 +341,7 @@ class ProcessTask extends Command
     private function _removeLocalTaskFiles()
     {
         Utils::log("删除任务目录 开始");
-        $local_task_file = $this->task_path . DS . $this->task_name;
+        $local_task_file = $this->task_path;
         $exec_result = Utils::runExec("rm -rf $local_task_file");
         if (false === $exec_result) {
             Utils::log("删除任务目录失败");

@@ -36,6 +36,18 @@ abstract class BaseModel
         return static::getInstance()->select('*', 'status=:STATUS', [':STATUS' => static::ENABLE]);
     }
 
+    public static function inIds($ids = [], $id_name = null)
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $ids = array_values($ids);
+        $in = str_repeat('?,', count($ids) - 1) . '?';
+        $model = static::getInstance();
+        $id_name = empty($id_name) ? $model->primary_key : $id_name;
+        return $model->select('*', "$id_name in ($in)", $ids);
+    }
+
     public static function inIdsEnables($ids = [], $id_name = null)
     {
         if (empty($ids)) {
@@ -52,6 +64,17 @@ abstract class BaseModel
     public static function findEnable($id)
     {
         return static::getInstance()->first('*', 'id=:ID', [':ID' => $id]);
+    }
+
+    // 查询所有
+    public static function search($select = '*', $where = '', $params = [])
+    {
+        return static::getInstance()->select($select, $where, $params);
+    }
+    // 查询一个
+    public static function searchOne($select = '*', $where = '', $params = [])
+    {
+        return static::getInstance()->first($select, $where, $params);
     }
 
     public static function getInstance()
@@ -117,7 +140,8 @@ abstract class BaseModel
      * @param array $params
      * @return static
      */
-    public static function add($params = []) {
+    public static function add($params = [])
+    {
         $model = new static();
         foreach ($params as $key => $value) {
             $model->{$key} = $value;
@@ -142,7 +166,7 @@ abstract class BaseModel
         }
         $rows = $this->db->select($sql, $params);
         // 映射为当前类
-        return array_map(function($item) {
+        return array_map(function ($item) {
             return cast(get_class($this), $item);
         }, $rows);
     }

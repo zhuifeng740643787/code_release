@@ -47,11 +47,11 @@ class LaunchReleaseJob extends Command
     // 判断进程是否已存在
     protected function isProcessExists($command)
     {
-        $process_info = exec("ps aux|grep loop_command| grep $command| grep -v 'grep'");
-        if (!empty(trim($process_info))) {
-            return true;
+        $process_info = Utils::runExec("ps aux|grep loop_command| grep $command| grep -v 'grep'");
+        if (false === $process_info || empty($process_info)) {
+            return false;
         }
-        return false;
+        return true;
     }
 
 

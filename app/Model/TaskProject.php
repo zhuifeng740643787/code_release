@@ -13,6 +13,7 @@ namespace App\Model;
  * @property int id
  * @property int task_status
  * @property int prev_status
+ * @property string status_info
  */
 class TaskProject extends BaseModel {
 
@@ -34,15 +35,18 @@ class TaskProject extends BaseModel {
     ];
 
     /**
+     * 修改状态,并写入日志
      * @param $status
+     * @param string $status_info
      * @return mixed
      */
-    public function changeStatus($status) {
+    public function changeStatus($status, $status_info = '') {
         if ($this->task_status == $status) {
             return $this;
         }
         $this->prev_status = $this->task_status;
         $this->task_status = $status;
+        $this->status_info = $status_info;
         $this->save();
         return $this;
     }

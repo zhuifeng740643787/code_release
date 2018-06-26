@@ -18,5 +18,6 @@ return [
     '/git/tags' => \App\Http\Controllers\Git\TagController::class,
 
     '/release' => \App\Http\Controllers\Release\IndexController::class,
+    '/release/progress' => \App\Http\Controllers\Release\ProgressController::class,
 
 ];

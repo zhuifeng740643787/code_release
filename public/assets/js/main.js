@@ -8,19 +8,7 @@ new Vue({
     return {
       formItem: {
         server_ids: [], // 要发布的服务器列表
-        projects: [
-          // {
-          //   project_id: 0,
-          //   branch: '',
-          //   tag: '',
-          //   replace_files: [
-          //     {
-          //       local_file: '',
-          //       replace_file: '',
-          //     },
-          //   ],
-          // }
-        ],
+        projects: [],
         release_code_path: '/acs/code/release',
         remark: '', // 发版说明
       },
@@ -31,6 +19,7 @@ new Vue({
       servers: {}, //
       loading: false,// 加载中
       loading_message: '加载中...',
+      // 文件替换模态框
       replaceFileModal: {
         visible: false,
         project_index: -1,
@@ -42,34 +31,21 @@ new Vue({
           },
         ],
       },
+      // 文件内容编辑模态框
       fileContentModal: {
         visible: false,
         index: 0,
         title: '文件详情',
         content: '',
       },
-      // 发布进度modal
+      // 发布进度模态框
       progressModal: {
         visible: false, // 控制modal显示
-        steps: [
-          '拉取分支代码',
-          '打包代码',
-          '上传至服务器',
-          '服务器端解压并部署代码包',
-          '保留历史版本'
-        ], // 发布的步骤
-        servers: {
-          'host1': {
-            rate: 1, // 当前进度
-            error: 'xx' // 是否有错，有错则停止
-          },
-          'host2': {
-            host: '123',
-            rate: 3, // 当前进度
-            error: 'xx' // 是否有错，有错则停止
-          },
-        }
+        group:{},
+        sub: {},
       },
+      // 定时任务
+      loopFetchProgress: null,
     }
   },
   computed: {
@@ -254,8 +230,55 @@ new Vue({
           }
           console.log(response)
           that.$Message.info('提交成功, 正在发布...')
+          // 将版本号写入localStorage
+          window.localStorage.version_num = response.result.version_num
+          // 定时获取发布状态
+          that._fetchProgressInfo()
         },
       })
+    },
+    // 获取发布进度信息
+    _fetchProgressInfo: function() {
+      if (that.loopFetchProgress != null || that.loopFetchProgress != undefined) {
+        window.clearInterval(that.loopFetchProgress)
+        that.loopFetchProgress = null
+      }
+      // 每3秒钟获取一次进度信息
+      that.loopFetchProgress = window.setInterval(function() {
+        var version_num = window.localStorage.version_num
+        if (typeof version_num === 'undefined' || version_num == '') {
+          window.clearInterval(that.loopFetchProgress)
+          that.loopFetchProgress = null
+          return
+        }
+        that.request.get({
+          url: '/release/progress',
+          params: {
+            version_num: version_num
+          },
+          success: function (e, response) {
+            if (response.status === 'error') {
+              return that.$Message.error(response.message)
+            }
+            console.log(response)
+            that.progressModal.visible = true;
+            that.progressModal.group = response.result.group
+            that.progressModal.sub = response.result.sub
+            // 报错或者成功后，清除定时任务
+            if (response.result.group.progress != 0) {
+              window.localStorage.clear()
+              window.clearInterval(that.loopFetchProgress)
+              that.loopFetchProgress = null
+              if (response.result.group.progress == -1) {
+                that.$Message.error("任务出错了")
+              } else {
+                that.$Message.info("任务完成")
+                that.handleReset()
+              }
+            }
+          },
+        })
+      }, 3000);
     },
     // 格式化要提交的服务器ID
     _formatSubmitServerIds: function () {
@@ -324,5 +347,7 @@ new Vue({
         console.error(error, '---')
       }
     })
+    // 获取发布进度信息
+    that._fetchProgressInfo()
   }
 })

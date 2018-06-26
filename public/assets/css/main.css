@@ -162,3 +162,6 @@
 .ivu-tooltip-inner {
     max-width: 800px !important;
 }
+.error-tip-box {
+    margin: 0 !important;
+}
