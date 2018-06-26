@@ -64,15 +64,15 @@ class ProgressController extends Controller
             'steps' => [] // 步骤
 
         ];
-        if ($ret['status'] === TaskGroup::STATUS_FINISHED) {
+        if ($ret['status'] == TaskGroup::STATUS_FINISHED) {
             $ret['progress'] = self::PROGRESS_OK;
-        } elseif ($ret['status'] === TaskGroup::STATUS_ERROR) {
+        } elseif ($ret['status'] == TaskGroup::STATUS_ERROR) {
             $ret['progress'] = self::PROGRESS_ERROR;
             $ret['error'] = $this->task_group->status_info ? $this->task_group->status_info : '任务报错';
         }
 
         foreach ($status_steps as $key => $status) {
-            if ($ret['status'] === TaskGroup::STATUS_ERROR) {
+            if ($ret['status'] == TaskGroup::STATUS_ERROR) {
                 if ($status == $this->task_group->prev_status) {
                     $ret['currentStep'] = $key + 1;
                 }
@@ -118,7 +118,7 @@ class ProgressController extends Controller
             } else {
                 $index = array_search($task->status, $status_steps);
             }
-            $progress = $task->status === Task::STATUS_ERROR ? self::PROGRESS_ERROR : ($task->status === Task::STATUS_FINISHED ? self::PROGRESS_OK : self::PROGRESS_ING);
+            $progress = $task->status == Task::STATUS_ERROR ? self::PROGRESS_ERROR : ($task->status == Task::STATUS_FINISHED ? self::PROGRESS_OK : self::PROGRESS_ING);
             if ($progress == self::PROGRESS_ING) {
                 $sub_has_ing = true;
             }
@@ -131,7 +131,7 @@ class ProgressController extends Controller
                 'progress' => $progress,
                 'status' => $task->status,
                 'currentStep' => $index === false ? 0 : $index + 1,// 当前进度
-                'error' => $task->status === Task::STATUS_ERROR ? ($task->status_info ? $task->status_info : '任务报错') : '', // 错误信息
+                'error' => $task->status == Task::STATUS_ERROR ? ($task->status_info ? $task->status_info : '任务报错') : '', // 错误信息
             ];
         }
         $subs['progress'] = $sub_has_error ? self::PROGRESS_ERROR : ($sub_has_ing ? self::PROGRESS_ING : self::PROGRESS_OK);
