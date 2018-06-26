@@ -137,11 +137,31 @@ new Vue({
             title: 'git仓库地址',
             key: 'repository',
             align: 'center',
+            width: 300,
+          },
+          {
+            title: '静态文件',
+            key: 'static_files',
+            align: 'center',
+            render: function(h, params){
+              var lis = []
+              params.row.static_files.forEach(function(item){
+                lis.push(h('span', item))
+              })
+
+              return h('div', {
+                class: 'table-td-list-wrapper',
+                props: {
+                  type: 'person'
+                }
+              }, lis)
+            }
           },
           {
             title: '状态',
             key: 'status_info',
             align: 'center',
+            width: 100,
           },
           {
             title: '创建时间',
