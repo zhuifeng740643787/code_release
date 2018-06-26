@@ -193,3 +193,15 @@
 .ivu-table {
     height: initial !important;
 }
+.table-td-list-wrapper {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 10px;
+}
+.table-td-list-wrapper span {
+    display: inline-block;
+    height: 30px;
+    line-height: 30px;
+}
+

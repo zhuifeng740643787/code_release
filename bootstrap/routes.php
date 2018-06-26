@@ -21,8 +21,10 @@ return [
     '/release/progress' => \App\Http\Controllers\Release\ProgressController::class,
 
     '/servers' => \App\Http\Controllers\Server\ListController::class,
+    '/server/group' => \App\Http\Controllers\Server\GroupController::class,
 
     '/projects' => \App\Http\Controllers\Project\ListController::class,
+    '/project/group' => \App\Http\Controllers\Project\GroupController::class,
 
 
 ];

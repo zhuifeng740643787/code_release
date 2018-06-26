@@ -309,5 +309,34 @@ var methods = {
       }
     })
   },
-
+  // 获取服务器组
+  fetchServerGroup: function() {
+    that.request.get({
+      url: '/server/group',
+      success: function (e, response) {
+        if (response.status === 'error') {
+          return that.$Message.error(response.message)
+        }
+        that.serverGroupTable.data = response.result.rows
+      },
+      error: function (e, error) {
+        console.error(error, '---')
+      }
+    })
+  },
+  // 获取项目组
+  fetchProjectGroup: function() {
+    that.request.get({
+      url: '/project/group',
+      success: function (e, response) {
+        if (response.status === 'error') {
+          return that.$Message.error(response.message)
+        }
+        that.projectGroupTable.data = response.result.rows
+      },
+      error: function (e, error) {
+        console.error(error, '---')
+      }
+    })
+  },
 }

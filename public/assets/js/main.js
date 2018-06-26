@@ -8,7 +8,7 @@ new Vue({
     return {
       // 菜单控制
       menu: {
-        active: 'release', // 显示的menu
+        active: 'config', // 显示的menu
         list: {
           release: {
             name: '代码发布',
@@ -95,6 +95,36 @@ new Vue({
         data: [
         ],
       },
+      // 服务器组表格
+      serverGroupTable: {
+        columns: [
+          {
+            title: '名称',
+            key: 'group_name',
+            align: 'center',
+          },
+          {
+            title: '包含项目',
+            key: 'group_name',
+            align: 'center',
+            render: function(h, params){
+              var lis = []
+              params.row.items.forEach(function(item){
+                lis.push(h('span', item.server_name))
+              })
+
+              return h('div', {
+                class: 'table-td-list-wrapper',
+                props: {
+                  type: 'person'
+                }
+              }, lis)
+            }
+          },
+        ],
+        data: [
+        ],
+      },
       // 项目表格
       projectTable: {
         columns: [
@@ -117,6 +147,36 @@ new Vue({
             title: '创建时间',
             key: 'created_at',
             align: 'center',
+          },
+        ],
+        data: [
+        ],
+      },
+      // 项目组表格
+      projectGroupTable: {
+        columns: [
+          {
+            title: '名称',
+            key: 'group_name',
+            align: 'center',
+          },
+          {
+            title: '包含项目',
+            key: 'group_name',
+            align: 'center',
+            render: function(h, params){
+              var lis = []
+              params.row.items.forEach(function(item){
+                  lis.push(h('span', item.project_name))
+              })
+
+              return h('div', {
+                class: 'table-td-list-wrapper',
+                props: {
+                  type: 'person'
+                }
+              }, lis)
+            }
           },
         ],
         data: [
@@ -154,6 +214,8 @@ new Vue({
     // 获取表格信息
     that.fetchServerList()
     that.fetchProjectList()
+    that.fetchProjectGroup()
+    that.fetchServerGroup()
 
     // 获取发布进度信息
     that.fetchProgressInfo()
