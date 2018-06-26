@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.6.22-log)
 # Database: code_release
-# Generation Time: 2018-06-26 05:43:23 +0000
+# Generation Time: 2018-06-26 05:52:15 +0000
 # ************************************************************
 
 
@@ -31,7 +31,7 @@ CREATE TABLE `project` (
   `repository` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'git仓库地址',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 2=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `project_name_uniq` (`name`),
   UNIQUE KEY `project_repository_uniq` (`repository`)
@@ -49,7 +49,7 @@ CREATE TABLE `project_group` (
   `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '组名称',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 0=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='项目组';
 
@@ -66,7 +66,7 @@ CREATE TABLE `project_group_combination` (
   `project_id` int(11) unsigned NOT NULL,
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态1=有效 0=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `project_group_combination_uniq` (`group_id`,`project_id`),
   KEY `project_group_combination_project_fk` (`project_id`),
@@ -87,7 +87,7 @@ CREATE TABLE `project_static_file` (
   `file_path` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '文件路径',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态1=有效 0=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `project_static_files_uniq` (`project_id`,`file_path`),
   CONSTRAINT `project_static_files_project_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -109,7 +109,7 @@ CREATE TABLE `server` (
   `port` int(11) unsigned NOT NULL DEFAULT '22' COMMENT '端口号',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 2=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `host` (`host`)
@@ -127,7 +127,7 @@ CREATE TABLE `server_group` (
   `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '组名称',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 0=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='服务器组';
 
@@ -144,7 +144,7 @@ CREATE TABLE `server_group_combination` (
   `server_id` int(11) unsigned NOT NULL,
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态1=有效 0=无效',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `server_group_combination_uniq` (`group_id`,`server_id`),
   KEY `server_group_combination_server_fk` (`server_id`),
@@ -167,7 +167,7 @@ CREATE TABLE `task` (
   `prev_status` tinyint(3) NOT NULL DEFAULT '10' COMMENT '前一状态',
   `status_info` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '状态说明，如报错说明',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `task_uniq` (`task_group_id`,`task_server_id`),
   KEY `task_task_server_fk` (`task_server_id`),
@@ -192,7 +192,7 @@ CREATE TABLE `task_group` (
   `remark` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '备注',
   `params` text COLLATE utf8mb4_unicode_ci COMMENT '任务参数json之后的字符串',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `task_group_uniq` (`version_num`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='任务组（负责本地项目文件打包，上传到服务器）';
@@ -211,7 +211,7 @@ CREATE TABLE `task_log` (
   `type` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '任务类型 1=组任务 2=子任务',
   `status` tinyint(3) NOT NULL DEFAULT '0' COMMENT '组任务状态 -10=任务报错 0=已取消 10=任务创建 20=开始任务 30=代码复制完成 40=打包完成  50=子任务进行中 60=完成;  子任务状态:-10=任务报错 0=取消 10=任务创建 20=已上传至服务器 30=已解压并部署 40=完成（已保留版本）',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `task_log_group_fk` (`task_group_id`),
   KEY `task_log_task_fk` (`task_id`),
@@ -238,7 +238,7 @@ CREATE TABLE `task_project` (
   `prev_status` tinyint(3) NOT NULL DEFAULT '0' COMMENT '前一状态',
   `status_info` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '状态说明，如报错说明',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `task_project_uniq` (`group_id`,`project_id`),
   KEY `task_project_project_index` (`project_id`),
@@ -260,7 +260,7 @@ CREATE TABLE `task_project_replace_file` (
   `local_file` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '本地文件',
   `replace_file` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '要替换的文件',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `task_project_replace_file_project_fk` (`task_project_id`),
   CONSTRAINT `task_project_replace_file_project_fk` FOREIGN KEY (`task_project_id`) REFERENCES `task_project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -283,7 +283,7 @@ CREATE TABLE `task_server` (
   `password` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '登录密码',
   `port` int(11) unsigned NOT NULL DEFAULT '22' COMMENT '端口号',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `task_server_uniq` (`group_id`,`server_id`),
   KEY `task_server_server_index` (`server_id`),
