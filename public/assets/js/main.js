@@ -23,7 +23,7 @@ new Vue({
       formItem: {
         server_ids: [], // 要发布的服务器列表
         projects: [],
-        release_code_path: '/acs/code/release',
+        release_code_path: (window.localStorage.release_code_path == undefined || window.localStorage.release_code_path == '') ? '/acs/code/release' : window.localStorage.release_code_path,
         remark: '', // 发版说明
       },
       server_group_index: -1, // 服务器组index

@@ -170,6 +170,7 @@ var methods = {
         that.$Message.info('提交成功, 正在发布...')
         // 将版本号写入localStorage
         window.localStorage.version_num = response.result.version_num
+        window.localStorage.release_code_path = params.release_code_path
         // 定时获取发布状态
         that.fetchProgressInfo()
       },
@@ -204,7 +205,7 @@ var methods = {
           that.progressModal.sub = response.result.sub
           // 报错或者成功后，清除定时任务
           if (response.result.group.progress != 0) {
-            window.localStorage.clear()
+            window.localStorage.removeItem('version_num')
             window.clearInterval(that.loopFetchProgress)
             that.loopFetchProgress = null
             if (response.result.group.progress == -1) {
@@ -258,7 +259,7 @@ var methods = {
     that.formItem = {
       server_ids: [], // 要发布的服务器列表
       projects: [],
-      release_code_path: '/acs/code/release',
+      release_code_path: (window.localStorage.release_code_path == undefined || window.localStorage.release_code_path == '') ? '/acs/code/release' : window.localStorage.release_code_path,
       remark: '', // 发版说明
     }
   },
