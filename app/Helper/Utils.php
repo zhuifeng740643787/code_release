@@ -81,16 +81,16 @@ class Utils
                 // 判断替换文件是目录还是文件
                 $file_explode = explode(DS, $replace_file);
                 // 是文件
-                if (strpos($file_explode[count($file_explode) - 1], '.') !== false) {
+                if (strpos($file_explode[count($file_explode) - 1], '.') > 0) {
                     $dir = rtrim($replace_file, DS . $file_explode[count($file_explode) - 1]);
                 } else {
                     $dir = $replace_file;
                 }
                 // 创建目录 并 将文件复制到替换目录
-                exec("mkdir -p $dir && cp $file $dir");
+                Utils::runExec("mkdir -p $dir && cp $file $replace_file");
             } else {
                 // 将文件复制到替换目录
-                exec("cp $file $replace_file");
+                Utils::runExec("cp $file $replace_file");
             }
         } catch (\Exception $exception) {
             Log::error($exception->getTraceAsString());

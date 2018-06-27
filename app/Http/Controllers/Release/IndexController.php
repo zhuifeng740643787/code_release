@@ -37,7 +37,6 @@ class IndexController extends Controller
 
     public function index(Request $request, Response $response)
     {
-        // http://release.mc3local.com/release?server_ids=[1,3]&release_code_path=/acs/code/release1&remark=asda%E5%A4%A7%E8%90%A8%E8%BE%BE&projects=[{%22id%22:1,%22branch_tag%22:%22branch-develop%22,%22replace_files%22:[{%22local_file%22:%2220180620/mc3/aa.txt%22,%22replace_file%22:%22test%22},{%22local_file%22:%2220180620/mc3/bb.txt%22,%22replace_file%22:%22asd%22}]},{%22id%22:2,%22branch_tag%22:%22branch-Branch_Develop_mc3%22,%22replace_files%22:[{%22local_file%22:%2220180620/mid_src/aa.txt%22,%22replace_file%22:%22aa%22}]}]
         $this->request = $request;
         $this->response = $response;
         // 生成版本号
@@ -129,6 +128,8 @@ class IndexController extends Controller
                 'release_name' => $branch_tag_arr[1],
                 'task_status' => TaskProject::TASK_STATUS_CREATED,
             ]);
+            // 记录上传的文件，便于后续过滤静态文件，以上传的文件优先
+            $upload_files = [];
             // 创建本地替换文件
             foreach ($item['replace_files'] as $file) {
                 TaskProjectReplaceFile::add([
@@ -137,10 +138,15 @@ class IndexController extends Controller
                     'local_file' => $file['local_file'],
                     'replace_file' => $file['replace_file'],
                 ]);
+                $upload_files[] = $this->_convertUploadFilePathToProjectFilePath($file['local_file'], $file['replace_file']);
             }
             // 创建静态文件
             if (!empty($this->project_static_files[$project_id])) {
                 foreach ($this->project_static_files[$project_id] as $file_path) {
+                    // 判断该文件夹是否已存在本地上传的文件中
+                    if (in_array($file_path, $upload_files)) {
+                        continue;
+                    }
                     TaskProjectReplaceFile::add([
                         'task_project_id' => $task_project->id,
                         'type' => TaskProjectReplaceFile::TYPE_STATIC,
@@ -149,6 +155,24 @@ class IndexController extends Controller
                 }
             }
         }
+    }
+
+    // 将上传文件路径转为项目文件路径
+    private function _convertUploadFilePathToProjectFilePath($upload_file_path, $project_file) {
+        $upload_file_arr = explode(DS, $upload_file_path);
+        $upload_file_name = $upload_file_arr[count($upload_file_arr) - 1];
+
+        // 判断替换文件是文件还是目录
+        $project_file = rtrim(trim($project_file), '/');
+        $project_file_arr = explode('/', $project_file);
+        $last_file = $project_file_arr[count($project_file_arr) - 1];
+        // 是文件
+        if (strpos($last_file, '.') > 0) {
+            return $project_file;
+        }
+
+        // 是目录
+        return $project_file . '/' . $upload_file_name;
     }
 
     // 接收参数
