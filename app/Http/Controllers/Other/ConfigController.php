@@ -19,7 +19,7 @@ class ConfigController extends Controller
     protected $params = [];
     public function index(Request $request, Response $response)
     {
-        $this->params['is_test'] = $request->get('is_test', false);
+        $this->params['is_test'] = $request->get('is_test', 0);
         return $response->jsonSuccess([
             'server_groups' => $this->_serverGroups(),
             'project_groups' => $this->_projectGroups()

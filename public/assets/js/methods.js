@@ -199,8 +199,8 @@ var methods = {
           if (response.status === 'error') {
             return that.$Message.error(response.message)
           }
-          console.log(response)
-          that.progressModal.visible = true;
+          that.progressModal.visible = true
+          that.progressModal.title = '【' + version_num + '】任务发布进度'
           that.progressModal.group = response.result.group
           that.progressModal.sub = response.result.sub
           // 报错或者成功后，清除定时任务
@@ -238,7 +238,6 @@ var methods = {
       var replace_files = typeof item.replace_files !== 'undefined' ? item.replace_files : []
       var replace_files_arr = []
       for (var i = 0; i < replace_files.length; i++) {
-        console.log(replace_files[i])
         if (replace_files[i].local_file != '') {
           replace_files_arr.push({
             local_file: replace_files[i].local_file,
@@ -259,7 +258,7 @@ var methods = {
     that.formItem = {
       server_ids: [], // 要发布的服务器列表
       projects: [],
-      release_code_path: (window.localStorage.release_code_path == undefined || window.localStorage.release_code_path == '') ? '/acs/code/release' : window.localStorage.release_code_path,
+      release_code_path: that.getDefaultCodeReleasePath(),
       remark: '', // 发版说明
     }
   },
@@ -356,8 +355,18 @@ var methods = {
   isTestPage: function() {
     var pathname = window.location.pathname
     if (pathname.indexOf('/test') === 0) {
-      return true
+      return 1
     }
-    return false
+    return 0
   },
+  // 默认代码发布路径
+  getDefaultCodeReleasePath: function() {
+    if (window.localStorage.release_code_path == undefined || window.localStorage.release_code_path == '') {
+      if (that.isTestPage()) {
+        return '/acs/code/release_test'
+      }
+      return '/acs/code/release'
+    }
+    return window.localStorage.release_code_path
+  }
 }

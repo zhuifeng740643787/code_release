@@ -1,7 +1,9 @@
 /**
  * Created by gongyidong on 2018/5/23.
  */
+
 var that
+
 new Vue({
   el: '#main',
   data: function () {
@@ -23,7 +25,7 @@ new Vue({
       formItem: {
         server_ids: [], // 要发布的服务器列表
         projects: [],
-        release_code_path: (window.localStorage.release_code_path == undefined || window.localStorage.release_code_path == '') ? '/acs/code/release' : window.localStorage.release_code_path,
+        release_code_path: '',
         remark: '', // 发版说明
       },
       server_group_index: -1, // 服务器组index
@@ -55,6 +57,7 @@ new Vue({
       // 发布进度模态框
       progressModal: {
         visible: false, // 控制modal显示
+        title: '发布进度',
         group:{},
         sub: {},
       },
@@ -229,6 +232,10 @@ new Vue({
   mounted: function () {
     // 获取主机列表
     that.request = new Request();
+
+    // 设置默认代码发布路径
+    that.formItem.release_code_path = that.getDefaultCodeReleasePath()
+
     // 获取配置信息
     that.fetchConfigInfo()
     // 获取表格信息

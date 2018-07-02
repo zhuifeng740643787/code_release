@@ -42,6 +42,8 @@ Request.prototype._request = function (method, options) {
   Object.keys(params).forEach(function(key){
     if (typeof params[key] === 'object') {
       params[key] = JSON.stringify(params[key])
+    } else if (typeof params[key] === 'boolean') {
+      params[key] = params[key] ? 1 : 0
     }
   })
   var xhr = typeof XMLHttpRequest !== 'undefined' ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP')

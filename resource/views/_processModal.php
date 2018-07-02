@@ -3,7 +3,7 @@
   :mask-closable="false"
   :closable="true"
   v-model="progressModal.visible"
-  title="发布进度">
+  :title="progressModal.title">
   <Card>
     <div slot="title" class="step-card-wrapper">
       <span class="card-title">组任务</span>
