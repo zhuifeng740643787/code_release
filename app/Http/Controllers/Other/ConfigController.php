@@ -16,9 +16,10 @@ use App\Model\ServerGroupCombination;
 
 class ConfigController extends Controller
 {
+    protected $params = [];
     public function index(Request $request, Response $response)
     {
-
+        $this->params['is_test'] = $request->get('is_test', false);
         return $response->jsonSuccess([
             'server_groups' => $this->_serverGroups(),
             'project_groups' => $this->_projectGroups()
@@ -26,7 +27,11 @@ class ConfigController extends Controller
     }
 
     private function _serverGroups() {
-        $groups = ServerGroup::allEnables();
+        if (!$this->params['is_test']) {
+            $groups = ServerGroup::allEnables();
+        } else {
+            $groups = ServerGroup::search('*', 'is_test=:IS_TEST and status=:STATUS', [':IS_TEST' => ServerGroup::YES, ':STATUS' => ServerGroup::ENABLE]);
+        }
         $groups = Utils::collectSetFieldAsKey($groups, 'id');
         $group_ids = Utils::collectFields($groups, 'id');
         $server_groups = ServerGroupCombination::getServersByGroupIds($group_ids);
@@ -60,7 +65,11 @@ class ConfigController extends Controller
     }
 
     private function _projectGroups() {
-        $groups = ProjectGroup::allEnables();
+        if (!$this->params['is_test']) {
+            $groups = ProjectGroup::allEnables();
+        } else {
+            $groups = ProjectGroup::search('*', 'is_test=:IS_TEST and status=:STATUS', [':IS_TEST' => ProjectGroup::YES, ':STATUS' => ProjectGroup::ENABLE]);
+        }
         $groups = Utils::collectSetFieldAsKey($groups, 'id');
         $group_ids = Utils::collectFields($groups, 'id');
         $project_groups = ProjectGroupCombination::getProjectsByGroupIds($group_ids);

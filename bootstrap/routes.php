@@ -8,6 +8,7 @@
 
 return [
     '/' => \App\Http\Controllers\Home\IndexController::class,
+    '/test' => \App\Http\Controllers\Home\TestController::class,
 
     '/other/config' => \App\Http\Controllers\Other\ConfigController::class,
     '/other/upload' => \App\Http\Controllers\Other\UploadController::class,

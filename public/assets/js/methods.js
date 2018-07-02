@@ -267,6 +267,9 @@ var methods = {
   fetchConfigInfo: function() {
     that.request.get({
       url: '/other/config',
+      params: {
+        is_test: that.isTestPage(),
+      },
       success: function (e, response) {
         if (response.status === 'error') {
           return that.$Message.error(response.message)
@@ -274,6 +277,15 @@ var methods = {
 
         that.serverGroups = response.result.server_groups
         that.projectGroups = response.result.project_groups
+        // 默认选中
+        if (that.serverGroups.length === 1) {
+          that.server_group_index = 0
+          that.handleServerGroupChange()
+        }
+        if (that.projectGroups.length === 1) {
+          that.project_group_index = 0
+          that.handleProjectGroupChange()
+        }
       },
       error: function (e, error) {
         console.error(error, '---')
@@ -339,5 +351,13 @@ var methods = {
         console.error(error, '---')
       }
     })
+  },
+  // 判断是否为测试页面
+  isTestPage: function() {
+    var pathname = window.location.pathname
+    if (pathname.indexOf('/test') === 0) {
+      return true
+    }
+    return false
   },
 }

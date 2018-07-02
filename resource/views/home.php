@@ -1,3 +1,7 @@
+<?php
+$load_css_list = ['/assets/css/main.css'];
+$load_js_list = ['/assets/js/main.js'];
+?>
 <?php include __DIR__ . DS . 'layout' . DS . 'header.php'; ?>
 
 <div id="main">

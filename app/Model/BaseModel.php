@@ -25,6 +25,8 @@ abstract class BaseModel
     const ENABLE = 1;
     const DISABLE = 0;
 
+    const YES = 1;
+    const NO = 0;
 
     public function __construct()
     {
