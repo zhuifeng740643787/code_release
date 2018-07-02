@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.6.22-log)
 # Database: code_release
-# Generation Time: 2018-06-26 06:11:21 +0000
+# Generation Time: 2018-07-02 07:38:09 +0000
 # ************************************************************
 
 
@@ -48,6 +48,7 @@ CREATE TABLE `project_group` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '组名称',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 0=无效',
+  `is_test` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '是否为测试 0=否 1=是',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -126,6 +127,7 @@ CREATE TABLE `server_group` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '组名称',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 0=无效',
+  `is_test` tinyint(3) unsigned DEFAULT '0' COMMENT '是否为测试 0=否 1=是',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
