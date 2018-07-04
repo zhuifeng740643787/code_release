@@ -368,5 +368,25 @@ var methods = {
       return '/acs/code/release'
     }
     return window.localStorage.release_code_path
+  },
+  flushBranches: function(project_id) {
+    if (project_id == '') {
+      return that.$Message.warning('未选择项目');
+    }
+    that.request.get({
+      url: '/git/branch/refresh',
+      params: {
+        project_id: project_id,
+      },
+      success: function (e, response) {
+        if (response.status === 'error') {
+          return that.$Message.error(response.message)
+        }
+        return that.$Message.info('刷新成功')
+      },
+      error: function (e, error) {
+        console.error(error, '---')
+      }
+    })
   }
 }

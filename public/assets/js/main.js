@@ -171,6 +171,28 @@ new Vue({
             key: 'created_at',
             align: 'center',
           },
+          {
+            title: '操作',
+            align: 'center',
+            render: function(h, params) {
+              return h('div', [
+                h('Button', {
+                  props: {
+                    type: 'primary',
+                    size: 'small'
+                  },
+                  style: {
+                    marginRight: '5px'
+                  },
+                  on: {
+                    click: function() {
+                      return that.flushBranches(params.row.id)
+                    }
+                  }
+                }, '刷新分支')
+              ])
+            },
+          },
         ],
         data: [
         ],

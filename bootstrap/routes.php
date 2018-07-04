@@ -16,6 +16,7 @@ return [
     '/other/file/change' => \App\Http\Controllers\Other\FileChangeController::class,
 
     '/git/branches' => \App\Http\Controllers\Git\BranchController::class,
+    '/git/branch/refresh' => \App\Http\Controllers\Git\BranchRefreshController::class,
     '/git/tags' => \App\Http\Controllers\Git\TagController::class,
 
     '/release' => \App\Http\Controllers\Release\IndexController::class,

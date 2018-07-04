@@ -71,6 +71,27 @@ class Code
         return $branch_arr;
     }
 
+    // 刷新仓库的所有分支
+    public static function refreshRepositoryBranches($project_name, $repository)
+    {
+        $deploy_config = app()->config->get('deploy');
+        $git = $deploy_config['local_git_bin'];
+        $code_path = realpath($deploy_config['local_tmp_code_path']) . DS . $project_name;
+
+        // 拉取最新代码
+        $pull_code = self::_pullCode($code_path, $repository);
+        // 看是否报错
+        if (is_string($pull_code)) {
+            return $pull_code;
+        }
+
+        $ret = Utils::runExec("cd $code_path && $git fetch ");
+        if (false === $ret) {
+            return '刷新失败';
+        }
+        return true;
+    }
+
     // 获取仓库的所有TAG
     public static function getRepositoryTags($project_name, $repository)
     {
