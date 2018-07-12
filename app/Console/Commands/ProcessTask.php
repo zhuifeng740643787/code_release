@@ -99,6 +99,10 @@ class ProcessTask extends Command
         foreach ($this->task_projects as $project) {
             // 项目代码复制->切换分支/标签->替换文件->写入release日志
             Utils::log("处理项目[{$project->name}]开始");
+
+            // 刷新基础项目代码分支
+            $this->_refreshProjectBranchesCode($project);
+
             // 复制代码
             $this->_copeProjectCode($project, $task_code_path);
 
@@ -121,6 +125,17 @@ class ProcessTask extends Command
         $this->_zipCodes($task_code_path, $zip_path);
     }
 
+    // 刷新基础项目代码分支
+    private function _refreshProjectBranchesCode($project) {
+        Utils::log("刷新项目代码分支开始");
+        $result = Code::refreshRepositoryBranches($project->name, $project->repository);
+        if (is_string($result)) {
+            // 失败
+            $project->changeStatus(TaskProject::TASK_STATUS_ERROR, '刷新项目代码分支失败');
+            throw new \Exception('刷新项目代码分支失败');
+        }
+        Utils::log("刷新项目代码分支完成");
+    }
 
     // 复制代码
     private function _copeProjectCode($project, $task_code_path)
@@ -331,6 +346,7 @@ class ProcessTask extends Command
         if (false === $exec_result) {
             $task->changeStatus(Task::STATUS_ERROR, "上传文件至服务器失败");
             Utils::log("上传至服务器[$task_server->name]($task_server->host) 失败");
+            return;
         }
         $task->changeStatus(Task::STATUS_UPLOADED);
         Utils::log("上传至服务器[$task_server->name]($task_server->host) 完成");
