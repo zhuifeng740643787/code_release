@@ -10,6 +10,7 @@ namespace App\Console;
 
 use App\Console\Commands\InitProjects;
 use App\Console\Commands\InitProjectsCode;
+use App\Console\Commands\LaunchCrontab;
 use App\Console\Commands\LaunchReleaseJob;
 use App\Console\Commands\ProcessTask;
 use App\Console\Commands\Test;
@@ -23,6 +24,7 @@ class Kernel
         InitProjectsCode::class,
         LaunchReleaseJob::class,
         ProcessTask::class,
+        LaunchCrontab::class,
     ];
 
     public function handle($app, $command_name, $params)

@@ -10,4 +10,5 @@ return [
     'DATABASE' => 'code_release',
     'USER' => 'root',
     'PASSWORD' => '',
+    'WEB_HOST' => 'http://localhost/',
 ];

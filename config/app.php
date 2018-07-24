@@ -13,4 +13,5 @@ return [
     ],
     'upload_file_path' => PROJECT_ROOT . DS . 'storage' . DS . 'tmp' . DS . 'upload', // 上传文件的路径
     'log_path' => PROJECT_ROOT . DS . 'storage' . DS . 'app' . DS . 'log', // 日志路径
+    'web_host' => env('WEB_HOST', 'http://localhost/'), // 网站host
 ];
