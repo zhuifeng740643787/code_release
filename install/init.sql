@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.6.22-log)
 # Database: code_release
-# Generation Time: 2018-07-02 07:38:09 +0000
+# Generation Time: 2018-07-25 10:36:17 +0000
 # ************************************************************
 
 
@@ -18,6 +18,68 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+
+# Dump of table crontab
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `crontab`;
+
+CREATE TABLE `crontab` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标题',
+  `release_code_path` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '代码发布目录',
+  `remark` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '备注',
+  `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 2=无效',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务列表';
+
+
+
+# Dump of table crontab_project
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `crontab_project`;
+
+CREATE TABLE `crontab_project` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `crontab_id` int(11) unsigned NOT NULL COMMENT '计划任务ID',
+  `project_id` int(11) unsigned NOT NULL COMMENT '项目ID',
+  `branch_type` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '分支类型 1=分支 2=标签',
+  `branch_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '分支名称',
+  `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 2=无效',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `crontab_project_uq` (`crontab_id`,`project_id`),
+  KEY `crontab_project_project_id` (`project_id`),
+  CONSTRAINT `crontab_project_crontab_fk` FOREIGN KEY (`crontab_id`) REFERENCES `crontab` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `crontab_project_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务要发布的服务器';
+
+
+
+# Dump of table crontab_server
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `crontab_server`;
+
+CREATE TABLE `crontab_server` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `crontab_id` int(11) unsigned NOT NULL COMMENT '计划任务ID',
+  `server_id` int(11) unsigned NOT NULL COMMENT '服务器ID',
+  `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 1=有效 2=无效',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `crontab_server_uq` (`crontab_id`,`server_id`),
+  KEY `crontab_server_server_id` (`server_id`),
+  CONSTRAINT `crontab_server_crontab_fk` FOREIGN KEY (`crontab_id`) REFERENCES `crontab` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `crontab_server_ibfk_1` FOREIGN KEY (`server_id`) REFERENCES `server` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务要发布的服务器';
+
 
 
 # Dump of table project
