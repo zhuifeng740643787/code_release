@@ -244,7 +244,10 @@ class ProcessTask extends Command
             $task_server = $this->task_servers[$task->task_server_id];
 
             // - 检查服务器是否可用
-            $this->_checkValidServer($task, $task_server);
+            $check = $this->_checkValidServer($task, $task_server);
+            if ($check === false) {
+                continue;
+            }
 
             // - 上传至服务器
             $this->_upZipCodeToServer($task, $task_server);
@@ -350,13 +353,14 @@ class ProcessTask extends Command
         if (false === $exec_result) {
             $task->changeStatus(Task::STATUS_ERROR, "服务器不可用");
             Utils::log("服务器[$task_server->name]($task_server->host) 不可用");
-            return;
+            return false;
         }
         // todo 检查是否有写入版本目录的权限
 
 
 
         Utils::log("检查服务器[$task_server->name]($task_server->host)是否可用 结束");
+        return true;
     }
 
     // 上传至服务器
