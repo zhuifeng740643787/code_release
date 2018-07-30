@@ -212,14 +212,7 @@ class IndexController extends Controller
         if (count($this->servers) !== count($this->_params['server_ids'])) {
             return '有不可用的服务器';
         }
-        foreach ($this->servers as $server) {
-            if (!Code::isServerVaild($server->name, $server->host, $server->user)) {
-                return "服务器{$server->name}不可用，请检查";
-            }
 
-            // todo 检查是否有写入版本目录的权限
-
-        }
         return true;
     }
 

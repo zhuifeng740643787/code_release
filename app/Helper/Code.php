@@ -121,7 +121,7 @@ class Code
      * @param $user 用户名
      * @return bool
      */
-    public static function isServerVaild($name, $host, $user)
+    public static function isServerValid($name, $host, $user)
     {
         $deploy_path = PROJECT_ROOT . DS . 'deploy' . DS . 'valid_server';
         $deploy_config = app()->config->get('deploy');
