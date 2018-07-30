@@ -3,6 +3,8 @@
 namespace Deployer;
 require 'recipe/common.php';
 
+ini_set('date.timezone', 'Asia/Shanghai');
+
 define('DS', DIRECTORY_SEPARATOR);
 define('TASK_SUCCESS', 1); // 操作成功
 define('TASK_ERROR', 0);

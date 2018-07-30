@@ -3,6 +3,8 @@
 namespace Deployer;
 require 'recipe/common.php';
 
+ini_set('date.timezone', 'Asia/Shanghai');
+
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
 

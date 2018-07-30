@@ -8,6 +8,8 @@ define("CONFIG_ROOT", PROJECT_ROOT .DS . 'config');
 define('STORAGE_ROOT', PROJECT_ROOT . DS . 'storage');
 define('TMP_ROOT', STORAGE_ROOT . DS . 'tmp');
 
+ini_set('date.timezone', 'Asia/Shanghai');
+
 require PROJECT_ROOT . DS . '_ide_helper.php';
 require PROJECT_ROOT . DS . 'bootstrap' . DS . 'autoload.php';
 spl_autoload_register('autoload');
